@@ -1,0 +1,171 @@
+@model IEnumerable<HotelRoomBookingAPI.Models.Web.BuildingsMaster>
+
+@{
+    ViewData["Title"] = "Building Master";
+    int rowNo = 1;
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Building Master</h2>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBuildingModal">
+            <i class="bi bi-plus-circle"></i> Add
+        </button>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped table-hover table-master-header">
+            <thead>
+                <tr>
+                    <th>S.No</th>
+                    <th>Building No</th>
+                    <th>Building Name</th>
+                    <th>Location</th>
+                    <th>No of Floors</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@(rowNo++)</td>
+                            <td>@item.Building_ID</td>
+                            <td>@item.Building_Name</td>
+                            <td>@item.Building_Location</td>
+                            <td>@item.TotalFloors</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-warning me-2" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#editBuildingModal"
+                                        data-id="@item.Building_ID"
+                                        data-name="@item.Building_Name"
+                                        data-location="@item.Building_Location"
+                                        data-floors="@item.TotalFloors">
+                                    Edit
+                                </button>
+                                <form asp-action="DeleteBuilding" asp-route-id="@item.Building_ID" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this building?');">
+                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center">No buildings found.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Building Modal -->
+<div class="modal fade" id="addBuildingModal" tabindex="-1" aria-labelledby="addBuildingModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="AddBuilding" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addBuildingModalLabel">Add Building</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="Building_Name" class="form-label">Building Name</label>
+                        <input type="text" class="form-control" id="Building_Name" name="Building_Name" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="Building_Location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="Building_Location" name="Building_Location" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="TotalFloors" class="form-label">Total Floors</label>
+                        <input type="number" class="form-control" id="TotalFloors" name="TotalFloors" min="1" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Building Modal -->
+<div class="modal fade" id="editBuildingModal" tabindex="-1" aria-labelledby="editBuildingModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="EditBuilding" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editBuildingModalLabel">Edit Building</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="Edit_Building_ID" name="Building_ID" />
+                    <div class="mb-3">
+                        <label for="Edit_Building_Name" class="form-label">Building Name</label>
+                        <input type="text" class="form-control" id="Edit_Building_Name" name="Building_Name" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="Edit_Building_Location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="Edit_Building_Location" name="Building_Location" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="Edit_TotalFloors" class="form-label">Total Floors</label>
+                        <input type="number" class="form-control" id="Edit_TotalFloors" name="TotalFloors" min="1" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var editModal = document.getElementById('editBuildingModal');
+        editModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            
+            var id = button.getAttribute('data-id');
+            var name = button.getAttribute('data-name');
+            var location = button.getAttribute('data-location');
+            var floors = button.getAttribute('data-floors');
+            
+            var modalIdInput = editModal.querySelector('#Edit_Building_ID');
+            var modalNameInput = editModal.querySelector('#Edit_Building_Name');
+            var modalLocationInput = editModal.querySelector('#Edit_Building_Location');
+            var modalFloorsInput = editModal.querySelector('#Edit_TotalFloors');
+            
+            modalIdInput.value = id;
+            modalNameInput.value = name;
+            modalLocationInput.value = location;
+            modalFloorsInput.value = floors;
+        });
+    });
+</script>
+
+

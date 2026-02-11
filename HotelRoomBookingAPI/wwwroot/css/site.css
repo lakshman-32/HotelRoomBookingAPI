@@ -1,0 +1,314 @@
+html {
+    font-size: 14px;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+/* Master Table Header Customization */
+.table-master-header thead th {
+    background-color: rgb(189, 215, 238) !important;
+    color: black !important;
+}
+
+
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    margin-bottom: 60px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: #f5f7fa;
+}
+
+/* Global Layout & Sidebar Styles */
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f8f9fa;
+}
+
+.sidebar {
+    width: 260px;
+    background: #000000;
+    /* Matching user provided color */
+    color: #e2e8f0;
+    position: fixed;
+    height: 100vh;
+    z-index: 1000;
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Scrollbar on the menu only */
+.sidebar-menu::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-menu::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.sidebar-brand {
+    padding: 2rem 1.5rem;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #fff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 0 0 auto;
+    /* Don't shrink/grow */
+}
+
+.sidebar-brand i {
+    color: #38bdf8;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 1rem;
+    margin: 0;
+    flex: 1 1 auto;
+    /* Take remaining space */
+    overflow-y: auto;
+    /* Scroll inside this area */
+    overflow-x: hidden;
+}
+
+.sidebar-menu li {
+    margin: 0.5rem 0;
+}
+
+/* Sidebar Menu Text Contrast */
+.sidebar-menu a {
+    display: flex;
+    align-items: center;
+    padding: 0.875rem 1rem;
+    color: #ffffff !important;
+    /* Force White */
+    text-decoration: none;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.sidebar-menu a:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff !important;
+    transform: translateX(4px);
+}
+
+.sidebar-menu a.active {
+    background: #ffffff;
+    color: #536DFE !important;
+    /* Blue text for active */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-menu a i {
+    margin-right: 0.75rem;
+    font-size: 1.1rem;
+    width: 20px;
+}
+
+/* Sidebar Submenu Text */
+.sidebar-submenu li a {
+    padding: 0.75rem 1rem 0.75rem 3.25rem;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+    border-radius: 0;
+}
+
+.sidebar-submenu li a:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    transform: none;
+}
+
+.sidebar-submenu li a.active {
+    color: #ffffff;
+    /* White for active submenu */
+    font-weight: 700;
+    position: relative;
+    background: transparent;
+    box-shadow: none;
+}
+
+.sidebar-brand i {
+    color: #ffffff;
+    /* Make brand icon white too */
+}
+
+/* Update user info text color explicitly */
+.sidebar-footer {
+    padding: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent;
+    /* Seamless with sidebar */
+    flex: 0 0 auto;
+    width: 100%;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    color: #ffffff;
+    margin-bottom: 1rem;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #dc2626; /* Red */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.75rem;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.logout-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background: #ffffff;
+    /* White background */
+    border: none;
+    color: #ef4444;
+    /* Red text */
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 700;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.logout-btn i {
+    color: #000000 !important;
+    /* Black icon as requested */
+    font-size: 1.1rem;
+}
+
+.logout-btn:hover {
+    background: #f8f9fa;
+    color: #dc2626;
+    transform: translateY(-2px);
+    /* Lift effect */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.main-content {
+    margin-left: 260px;
+    flex: 1;
+    padding: 2rem;
+    width: calc(100% - 260px);
+}
+
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.page-header h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+    letter-spacing: -1px;
+}
+
+.page-header p {
+    color: #64748b;
+    font-size: 1rem;
+}
+
+.sidebar-submenu {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 5px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.sidebar-submenu li a {
+    padding: 0.75rem 1rem 0.75rem 3.25rem;
+    font-size: 0.9rem;
+    color: #94a3b8;
+    border-radius: 0;
+    /* Removing border radius for stacked items */
+}
+
+.sidebar-submenu li a:hover {
+    background: rgba(255, 255, 255, 0.03);
+    color: #fff;
+    transform: none;
+    /* No movement for sub-items */
+}
+
+.sidebar-submenu li a.active {
+    color: #38bdf8;
+    background: transparent;
+    box-shadow: none;
+    font-weight: 600;
+}
+
+/* Sidebar Toggle Transition */
+.sidebar,
+.main-content {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Collapsed State */
+.dashboard-container.sidebar-collapsed .sidebar {
+    margin-left: -260px;
+}
+
+.dashboard-container.sidebar-collapsed .main-content {
+    margin-left: 0;
+    width: 100%;
+}
+
+/* Responsive Handling for Collapsed State */
+@media (max-width: 768px) {
+    .dashboard-container.sidebar-collapsed .sidebar {
+        margin-left: -70px;
+        /* Hide the smaller sidebar */
+    }
+
+    .dashboard-container.sidebar-collapsed .main-content {
+        margin-left: 0;
+    }
+}

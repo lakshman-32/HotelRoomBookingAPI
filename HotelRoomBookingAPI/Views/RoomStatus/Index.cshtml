@@ -1,0 +1,158 @@
+@model IEnumerable<HotelRoomBookingAPI.Models.Web.RoomStatus>
+
+@{
+    ViewData["Title"] = "Room Status Reports";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Room Status Reports</h1>
+        <form method="get" class="d-flex align-items-center">
+             <label class="me-2 fw-bold text-nowrap">Filter By Date:</label>
+             <input type="date" name="date" class="form-control" style="width: auto;" value="@ViewBag.SelectedDate" onchange="this.form.submit()" />
+             @if(ViewBag.SelectedDate != null) {
+                 <a asp-action="Index" class="btn btn-sm btn-outline-secondary ms-2">Clear</a>
+             }
+        </form>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Room Checklists</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead style="background-color: rgb(189, 215, 238);">
+                        <tr>
+                            <th>ID</th>
+                            <th>Booking ID</th>
+                            <th>Room No</th>
+                            <th>Room Cleaned</th>
+                            <th>Bathroom Cleaned</th>
+                            <th>Bed Cleaned</th>
+                            <th>Water Bottles</th>
+                            <th>Bedsheet</th>
+                            <th>Towel</th>
+                            <th>Dustbin</th>
+                            <th>Remarks</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.Id</td>
+                                <td>
+                                    <span class="badge bg-secondary">#@item.BookingId</span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold">@item.Booking?.Room?.RoomNumber</span>
+                                </td>
+                                <td class="text-center">@Html.Raw(item.RoomCleaned ? "<i class='bi bi-check-circle-fill text-success'></i>" : "<i class='bi bi-x-circle-fill text-danger'></i>")</td>
+                                <td class="text-center">@Html.Raw(item.BathroomCleaned ? "<i class='bi bi-check-circle-fill text-success'></i>" : "<i class='bi bi-x-circle-fill text-danger'></i>")</td>
+                                <td class="text-center">@Html.Raw(item.BedCleaned ? "<i class='bi bi-check-circle-fill text-success'></i>" : "<i class='bi bi-x-circle-fill text-danger'></i>")</td>
+                                <td class="text-center">@Html.Raw(item.WaterBottlesProvided ? "<i class='bi bi-check-circle-fill text-success'></i>" : "<i class='bi bi-x-circle-fill text-danger'></i>")</td>
+                                <td class="text-center">@Html.Raw(item.BedsheetProvided ? "<i class='bi bi-check-circle-fill text-success'></i>" : "<i class='bi bi-x-circle-fill text-danger'></i>")</td>
+                                <td class="text-center">@Html.Raw(item.TowelProvided ? "<i class='bi bi-check-circle-fill text-success'></i>" : "<i class='bi bi-x-circle-fill text-danger'></i>")</td>
+                                <td class="text-center">@Html.Raw(item.DustbinCleaned ? "<i class='bi bi-check-circle-fill text-success'></i>" : "<i class='bi bi-x-circle-fill text-danger'></i>")</td>
+                                <td>@item.Remarks</td>
+                                <td>@item.CreatedAt.ToString("MMM dd, yyyy HH:mm")</td>
+                                <td>
+                                    <button class="btn btn-sm btn-info text-white" 
+                                            onclick='viewStatus(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(item)))'>
+                                        <i class="bi bi-eye"></i> View
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Status Modal -->
+<div class="modal fade" id="viewStatusModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title"><i class="bi bi-clipboard-check me-2"></i>Report Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <strong>Booking ID:</strong> <span id="vBookingId"></span>
+                    </div>
+                     <div class="col-md-6 text-end">
+                        <strong>Date:</strong> <span id="vDate"></span>
+                    </div>
+                </div>
+                
+                 <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Checklist Item</th>
+                                <th class="text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vChecklistBody">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-3">
+                    <strong>Remarks:</strong>
+                    <p id="vRemarks" class="text-muted border p-2 rounded bg-light"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function viewStatus(item) {
+            const modal = new bootstrap.Modal(document.getElementById('viewStatusModal'));
+            
+            document.getElementById('vBookingId').textContent = '#' + item.BookingId;
+            document.getElementById('vDate').textContent = new Date(item.CreatedAt).toLocaleString();
+            document.getElementById('vRemarks').textContent = item.Remarks || 'No remarks provided.';
+            
+            const checks = [
+                { label: 'Room Cleaned', val: item.RoomCleaned },
+                { label: 'Bathroom Cleaned', val: item.BathroomCleaned },
+                { label: 'Bed Cleaned', val: item.BedCleaned },
+                { label: 'Water Bottles Provided', val: item.WaterBottlesProvided },
+                { label: 'Bedsheet Provided', val: item.BedsheetProvided },
+                { label: 'Towel Provided', val: item.TowelProvided },
+                { label: 'Dustbin Cleaned', val: item.DustbinCleaned }
+            ];
+            
+            const tbody = document.getElementById('vChecklistBody');
+            tbody.innerHTML = checks.map(c => `
+                <tr>
+                    <td>${c.label}</td>
+                    <td class="text-center">
+                        ${c.val 
+                            ? '<i class="bi bi-check-circle-fill text-success fs-5"></i>' 
+                            : '<i class="bi bi-x-circle-fill text-danger fs-5"></i>'}
+                    </td>
+                </tr>
+            `).join('');
+            
+            modal.show();
+        }
+    </script>
+}
+
+

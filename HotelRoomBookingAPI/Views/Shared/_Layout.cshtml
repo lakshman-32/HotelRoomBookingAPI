@@ -1,0 +1,188 @@
+﻿@{
+    bool showSidebar = !string.Equals(ViewContext.RouteData.Values["Controller"]?.ToString(), "Account", StringComparison.OrdinalIgnoreCase);
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CAP Booking</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/HotelRoomBookingAPI.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="dashboard-container @(showSidebar ? "" : "sidebar-collapsed")">
+        <!-- Sidebar -->
+        @if (showSidebar)
+        {
+            <aside class="sidebar">
+                <div class="sidebar-brand">
+                    <i class="bi bi-building"></i> CAP Booking
+                </div>
+                
+                <ul class="sidebar-menu">
+                    <li>
+                        <a href="@Url.Action("Index", "Dashboard")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Dashboard" ? "active" : "")">
+                            <i class="bi bi-house-door"></i>
+                            <span>Home</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="@Url.Action("Index", "Rooms")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Rooms" && ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "active" : "")">
+                            <i class="bi bi-door-open"></i>
+                            <span>Rooms</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="@Url.Action("Available", "Rooms")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Rooms" && ViewContext.RouteData.Values["Action"]?.ToString() == "Available" ? "active" : "")">
+                            <i class="bi bi-calendar-check-fill"></i>
+                            <span>Availability</span>
+                        </a>
+                    </li>
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <li>
+                            <a href="@Url.Action("MyBookings", "Reservations")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reservations" && ViewContext.RouteData.Values["Action"]?.ToString() == "MyBookings" ? "active" : "")">
+                                <i class="bi bi-calendar-check"></i>
+                                <span>My Bookings</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="@Url.Action("Index", "Meals")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Meals" ? "active" : "")">
+                                <i class="bi bi-egg-fried"></i>
+                                <span>Meals</span>
+                            </a>
+                        </li>
+
+                        <li>
+                            <a href="@Url.Action("Index", "Reports")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "active" : "")">
+                                <i class="bi bi-file-earmark-bar-graph"></i>
+                                <span>Meal Reports</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="@Url.Action("Availability", "Reports")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["Action"]?.ToString() == "Availability" ? "active" : "")">
+                                <i class="bi bi-calendar-range"></i>
+                                <span>Availability Report</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="@Url.Action("Index", "RoomStatus")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "RoomStatus" ? "active" : "")">
+                                <i class="bi bi-clipboard-check"></i>
+                                <span>Room Status</span>
+                            </a>
+                        </li>
+
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <li>
+                                <a href="#mastersSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle" style="justify-content: space-between;">
+                                    <div style="display: flex; align-items: center;">
+                                        <i class="bi bi-collection"></i>
+                                        <span>Masters</span>
+                                    </div>
+                                    <i class="bi bi-chevron-down" style="font-size: 0.8rem;"></i>
+                                </a>
+                                <ul class="collapse list-unstyled sidebar-submenu" id="mastersSubmenu">
+                                    <li>
+                                        <a href="@Url.Action("BuildingMaster", "Admin")" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "BuildingMaster" ? "active" : "")">Building Master</a>
+                                    </li>
+                                    <li>
+                                        <a href="@Url.Action("FloorMaster", "Admin")" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "FloorMaster" ? "active" : "")">Floor Master</a>
+                                    </li>
+                                    <li>
+                                        <a href="@Url.Action("RoomMaster", "Admin")" class="@(ViewContext.RouteData.Values["Action"]?.ToString() == "RoomMaster" ? "active" : "")">Room Master</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li>
+                                <a href="@Url.Action("Dashboard", "Admin")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["Action"]?.ToString() == "Dashboard" ? "active" : "")">
+                                    <i class="bi bi-gear"></i>
+                                    <span>Admin Dashboard</span>
+                                </a>
+                            </li>
+                        }
+                    }
+                    else
+                    {
+                        <li>
+                            <a href="@Url.Action("Login", "Account")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Account" && ViewContext.RouteData.Values["Action"]?.ToString() == "Login" ? "active" : "")">
+                                <i class="bi bi-box-arrow-in-right"></i>
+                                <span>Login</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="@Url.Action("Register", "Account")" class="@(ViewContext.RouteData.Values["Controller"]?.ToString() == "Account" && ViewContext.RouteData.Values["Action"]?.ToString() == "Register" ? "active" : "")">
+                                <i class="bi bi-person-plus"></i>
+                                <span>Register</span>
+                            </a>
+                        </li>
+                    }
+                </ul>
+
+                <div class="sidebar-footer">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <div class="user-info">
+                            <div class="user-avatar">
+                                @(User.Identity.Name?.Substring(0, 1).ToUpper() ?? "U")
+                            </div>
+                            <div>
+                                <div style="font-size: 0.9rem; font-weight: 600;">@User.Identity.Name</div>
+                                <div style="font-size: 0.75rem; opacity: 0.7;">@(User.IsInRole("Admin") ? "Admin" : "User")</div>
+                            </div>
+                        </div>
+                        <a href="#" class="logout-btn d-block text-center text-decoration-none" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                            <i class="bi bi-box-arrow-right"></i>   Logout
+                        </a>
+                    }
+                </div>
+            </aside>
+        }
+
+        <!-- Main Content -->
+        <main class="main-content">
+            @if (showSidebar)
+            {
+                <div class="top-bar d-flex align-items-center mb-4">
+                   <!-- Toggle Moved to Sidebar -->
+                </div>
+            }
+
+            @RenderBody()
+            
+
+        </main>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <div class="mb-3 text-warning">
+                        <i class="bi bi-exclamation-circle" style="font-size: 3rem;"></i>
+                    </div>
+                    <p class="mb-0 fs-5">Are you sure you want to log out?</p>
+                    <p class="text-muted small">You will be returned to the login screen.</p>
+                </div>
+                <div class="modal-footer border-top-0 pt-0 justify-content-center pb-4">
+                    <button type="button" class="btn btn-outline-secondary px-4 me-2" data-bs-dismiss="modal">Cancel</button>
+                    <a href="@Url.Action("Logout", "Account")" class="btn btn-danger px-4 text-white">Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

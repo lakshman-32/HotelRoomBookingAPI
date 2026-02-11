@@ -1,0 +1,763 @@
+@model IEnumerable<HotelRoomBookingAPI.Models.Web.Booking>
+
+@{
+    ViewData["Title"] = "My Bookings";
+}
+
+<style>
+
+    
+    .filter-controls {
+        background: white;
+        padding: 20px; 
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        margin-bottom: 30px;
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .btn-filter {
+        border: none;
+        border-radius: 50px;
+        padding: 10px 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        background: #e2e8f0;
+        color: #4a5568;
+    }
+
+    .btn-filter.active, .btn-filter:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .btn-filter.confirmed.active {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+    }
+
+    .btn-filter.cancelled.active {
+        background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        color: white;
+    }
+    
+    .btn-filter.all.active {
+        background: #4a5568;
+        color: white;
+    }
+    
+    .booking-card {
+        background: white;
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        animation: slideIn 0.5s ease-out;
+        animation-fill-mode: both;
+    }
+    
+    @@keyframes slideIn {
+        from { opacity: 0; transform: translateX(-30px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    
+    .booking-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 50px rgba(168, 237, 234, 0.3);
+        border-color: #a8edea;
+    }
+    
+    .booking-hotel-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 5px;
+    }
+    
+    .booking-room-info {
+        color: #718096;
+        font-size: 1rem;
+        margin-bottom: 15px;
+    }
+    
+    .booking-dates-vertical {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .date-row {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 10px;
+        background: #f7fafc;
+        border-radius: 10px;
+        border-left: 3px solid #a8edea;
+    }
+    
+    .date-label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        color: #a0aec0;
+        font-weight: 600;
+        min-width: 80px;
+    }
+    
+    .date-value {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #2d3748;
+    }
+    
+    .status-badge {
+        padding: 5px 15px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 12px;
+        display: inline-block;
+        margin-bottom: 10px;
+    }
+    
+    .status-booked { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; }
+    .status-cancelled { background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%); color: white; }
+    .status-checkedin { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .status-other { background: #e2e8f0; color: #4a5568; }
+
+    /* Occupants List Styles */
+    .occupants-section {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 15px;
+        padding: 15px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .occupants-header {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #4a5568;
+        margin-bottom: 10px;
+        padding-bottom: 5px;
+        border-bottom: 1px solid #edf2f7;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .occupants-list {
+        flex: 1;
+        overflow-y: auto;
+        max-height: 200px; /* Adjust as needed */
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    
+    .occupants-list::-webkit-scrollbar {
+        width: 4px;
+    }
+    .occupants-list::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 4px;
+    }
+
+    .occupant-item {
+        padding: 8px 0;
+        border-bottom: 1px solid #f7fafc;
+        font-size: 0.9rem;
+        color: #2d3748;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .occupant-item:last-child {
+        border-bottom: none;
+    }
+
+    .occupant-status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 5px;
+    }
+    .dot-green { background-color: #48bb78; }
+    .dot-red { background-color: #f56565; }
+    .dot-orange { background-color: #ed8936; } /* Orange for pending */
+    .dot-gray { background-color: #cbd5e0; }
+
+</style>
+
+<div class="page-header">
+    <h1>My Bookings</h1>
+</div>
+
+<div class="container">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="success-message">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+        </div>
+    }
+    
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="filter-controls" style="margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <button class="btn-filter" data-status="all" onclick="filterBookings('all', this)">All Bookings</button>
+            <button class="btn-filter confirmed active" data-status="Booked" onclick="filterBookings('Booked', this)">Confirmed</button>
+            <button class="btn-filter cancelled" data-status="Cancelled" onclick="filterBookings('Cancelled', this)">Cancelled</button>
+        </div>
+        
+        <div class="d-flex align-items-center gap-3">
+            <input type="text" id="searchInput" class="form-control" placeholder="Search by Occupant Name, Building name, Room no..." onkeyup="applyFilters()" style="min-width: 440px;">
+            
+            <div class="date-filter-group d-inline-flex align-items-center" style="white-space: nowrap;">
+                 <label for="dateFilter" class="me-2 fw-bold text-muted">Filter by Date:</label>
+                 <input type="date" id="dateFilter" class="form-control" value="@(((string)ViewData["CurrentDate"]))" onchange="applyDateFilter()">
+            </div>
+        </div>
+    </div>
+    
+    <partial name="_CheckInCheckOutModal" />
+
+    @if (!Model.Any())
+    {
+        <div class="no-bookings-alert">
+            <h4 class="mb-3" style="color: #2d3748; font-weight: 700;">No bookings yet</h4>
+            <p style="color: #718096; margin-bottom: 30px;">Start your journey by booking a room with us!</p>
+            <a asp-controller="Rooms" asp-action="Available" class="btn-book-now">Book a Room Now</a>
+        </div>
+    }
+    else
+    {
+        <div id="bookingsList">
+            @foreach (var item in Model)
+            {
+                <div class="booking-card" 
+                     data-status="@item.BookingStatus" 
+                     data-date="@item.CheckInDate.ToString("yyyy-MM-dd")"
+                     data-search-text="@(item.Room?.Building?.Building_Name + " " + item.Room?.RoomNumber + " " + (item.Occupants != null ? string.Join(" ", item.Occupants.Select(o => o.FullName)) : ""))">
+                    <div class="row">
+                        <!-- Left Side: Booking Info -->
+                        <div class="col-md-8">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h3 class="booking-hotel-name">
+                                        <i class="bi bi-building"></i> @item.Room?.Building?.Building_Name
+                                    </h3>
+                                    <p class="booking-room-info">
+                                        <span class="badge bg-light text-dark border"><i class="bi bi-door-open"></i> Room @item.Room?.RoomNumber</span>
+                                        <span class="text-muted ms-1">- @item.Room?.RoomType?.RoomTypeName</span>
+                                    </p>
+                                </div>
+                                <div class="ms-3">
+                                    @{
+                                        var checkedInCount = item.Occupants?.Count(o => o.IsCheckedIn) ?? 0;
+                                        var checkedOutCount = item.Occupants?.Count(o => o.IsCheckedOut) ?? 0;
+                                        var totalOccupants = item.Occupants?.Count ?? 0;
+                                        var allCheckedOut = totalOccupants > 0 && checkedOutCount == totalOccupants;
+                                        var anyCheckedIn = checkedInCount > 0;
+                                    }
+
+                                    @if (item.BookingStatus == "Booked")
+                                    {
+                                        if (anyCheckedIn && !allCheckedOut)
+                                        {
+                                            <span class="status-badge status-checkedin">Checked In</span>
+                                        }
+                                        else if (allCheckedOut)
+                                        {
+                                            <span class="status-badge status-cancelled" style="background: #e2e8f0; color: #4a5568;">Checked Out</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-badge status-booked">Confirmed</span>
+                                        }
+                                    }
+                                    else if (item.BookingStatus == "CheckedIn")
+                                    {
+                                        <span class="status-badge status-checkedin">Checked In</span>
+                                    }
+                                    else if (item.BookingStatus == "Cancelled")
+                                    {
+                                        <span class="status-badge status-cancelled">Cancelled</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge status-other">@item.BookingStatus</span>
+                                    }
+                                </div>
+                            </div>
+                            
+                            <div class="booking-dates-vertical">
+                                <div class="date-row">
+                                    <span class="date-label"><i class="bi bi-calendar-check text-primary"></i> Check-In</span>
+                                    <span class="date-value">@item.CheckInDate.ToString("MMM dd, yyyy")</span>
+                                    @if (item.BookingStartDateTime.HasValue)
+                                    {
+                                        <span class="badge bg-light text-primary border ms-auto"><i class="bi bi-clock me-1"></i> @item.BookingStartDateTime.Value.ToString("hh:mm tt")</span>
+                                    }
+                                </div>
+                                <div class="date-row">
+                                    <span class="date-label"><i class="bi bi-calendar-x text-danger"></i> Check-Out</span>
+                                    <span class="date-value">@item.CheckOutDate.ToString("MMM dd, yyyy")</span>
+                                    @if (item.BookingEndDateTime.HasValue)
+                                    {
+                                        <span class="badge bg-light text-danger border ms-auto"><i class="bi bi-clock me-1"></i> @item.BookingEndDateTime.Value.ToString("hh:mm tt")</span>
+                                    }
+                                </div>
+                            </div>
+
+                            @if (item.BookingStatus == "Booked")
+                            {
+                                <div class="mt-3 d-flex gap-2">
+                                    @if (allCheckedOut)
+                                    {
+                                        <button class="btn btn-secondary btn-sm rounded-pill px-3" disabled title="All occupants checked out">
+                                            <i class="bi bi-people-fill"></i> Manage Occupants
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <a asp-action="ConfirmBooking" asp-controller="Reservations" asp-route-id="@item.BookingId" 
+                                           asp-route-fromStatus="@ViewData["CurrentStatus"]" 
+                                           asp-route-fromDate="@ViewData["CurrentDate"]"
+                                           class="btn btn-primary btn-sm rounded-pill px-3">
+                                            <i class="bi bi-people-fill"></i> Manage Occupants
+                                        </a>
+                                    }
+
+                                    <button class="btn btn-info btn-sm rounded-pill px-3 text-white" onclick="openCheckInCheckOutModal(@item.BookingId)" @(allCheckedOut ? "disabled title='All occupants checked out'" : "")>
+                                        <i class="bi bi-calendar-check"></i> Check-In/Out
+                                    </button>
+                                    <button class="btn btn-warning btn-sm rounded-pill px-3 text-white" onclick="openRoomStatusModal(@item.BookingId)" @(allCheckedOut ? "disabled title='All occupants checked out'" : "")>
+                                        <i class="bi bi-clipboard-check"></i> Room Status
+                                    </button>
+                                    <button class="btn btn-danger btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#cancelModal-@item.BookingId" @(allCheckedOut ? "disabled title='All occupants checked out'" : "")>
+                                        <i class="bi bi-x-circle"></i> Cancel Booking
+                                    </button>
+                                </div>
+                                
+                                @if (item.RoomStatuses != null && item.RoomStatuses.Any())
+                                {
+                                    var rs = item.RoomStatuses.OrderByDescending(r => r.CreatedAt).First();
+                                    <div class="mt-3 py-2 border-top">
+                                        <div class="d-flex flex-wrap align-items-center gap-3" style="font-size: 0.9rem;">
+                                            <span class="fw-bold text-dark me-2">Room Status:</span>
+                                            
+                                            <span class="d-flex align-items-center gap-1">
+                                                @if(rs.RoomCleaned) { <i class="bi bi-check-circle-fill text-success"></i> } else { <i class="bi bi-x-circle-fill text-danger"></i> }
+                                                Room Cleaned
+                                            </span>
+                                            <span class="d-flex align-items-center gap-1">
+                                                @if(rs.BathroomCleaned) { <i class="bi bi-check-circle-fill text-success"></i> } else { <i class="bi bi-x-circle-fill text-danger"></i> }
+                                                Bathroom Cleaned
+                                            </span>
+                                            <span class="d-flex align-items-center gap-1">
+                                                @if(rs.BedCleaned) { <i class="bi bi-check-circle-fill text-success"></i> } else { <i class="bi bi-x-circle-fill text-danger"></i> }
+                                                Bed Cleaned
+                                            </span>
+                                            <span class="d-flex align-items-center gap-1">
+                                                @if(rs.WaterBottlesProvided) { <i class="bi bi-check-circle-fill text-success"></i> } else { <i class="bi bi-x-circle-fill text-danger"></i> }
+                                                Water Bottles
+                                            </span>
+                                            <span class="d-flex align-items-center gap-1">
+                                                @if(rs.BedsheetProvided) { <i class="bi bi-check-circle-fill text-success"></i> } else { <i class="bi bi-x-circle-fill text-danger"></i> }
+                                                Bedsheets
+                                            </span>
+                                            <span class="d-flex align-items-center gap-1">
+                                                @if(rs.TowelProvided) { <i class="bi bi-check-circle-fill text-success"></i> } else { <i class="bi bi-x-circle-fill text-danger"></i> }
+                                                Towels
+                                            </span>
+                                            <span class="d-flex align-items-center gap-1">
+                                                @if(rs.DustbinCleaned) { <i class="bi bi-check-circle-fill text-success"></i> } else { <i class="bi bi-x-circle-fill text-danger"></i> }
+                                                Dustbin
+                                            </span>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+
+                        <!-- Right Side: Occupants List -->
+                        <div class="col-md-4">
+                            <div class="occupants-section">
+                                <div class="occupants-header">
+                                    <div class="d-flex align-items-center">
+                                        <span><i class="bi bi-people"></i> Occupants</span>
+                                        @if(item.ClientKind != null)
+                                        {
+                                            <span class="badge bg-info text-dark ms-2" style="font-size: 0.75rem;">@item.ClientKind.ClientKindName</span>
+                                        }
+                                    </div>
+                                    @if(totalOccupants > 0) 
+                                    {
+                                        if (allCheckedOut)
+                                        {
+                                            <span class="badge bg-danger rounded-pill">@checkedOutCount/@totalOccupants</span>
+                                        }
+                                        else if (anyCheckedIn)
+                                        {
+                                            <span class="badge bg-success rounded-pill">@checkedInCount/@totalOccupants</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary rounded-pill">@totalOccupants</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                         <span class="badge bg-secondary rounded-pill">0</span>
+                                    }
+                                </div>
+                                <ul class="occupants-list">
+                                    @if (item.Occupants != null && item.Occupants.Any())
+                                    {
+                                        @foreach (var occupant in item.Occupants)
+                                        {
+                                            var dotClass = "dot-orange"; // Default: Not Checked In (Pending)
+                                            if (occupant.IsCheckedOut)
+                                            {
+                                                dotClass = "dot-gray"; // Checked Out - Gray (Terminal state)
+                                            }
+                                            else if (occupant.IsCheckedIn)
+                                            {
+                                                dotClass = "dot-green"; // Checked In
+                                            }
+
+                                            <li class="occupant-item">
+                                                <div class="d-flex align-items-center w-100 justify-content-between">
+                                                    <div class="d-flex align-items-center">
+                                                        <span class="occupant-status-dot @dotClass flex-shrink-0" title="@(dotClass == "dot-orange" ? "Pending Check-In" : (dotClass == "dot-green" ? "Checked In" : "Checked Out"))"></span>
+                                                        <span class="ms-2 fw-bold" style="font-size: 0.95rem;">@occupant.FullName</span>
+                                                    </div>
+                                                    <div class="text-muted small">
+                                                        <span class="fw-bold text-dark">Phone:</span> @occupant.PhoneNumber
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <li class="text-center text-muted mt-3 small">No occupants added.</li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- Cancel Modals -->
+@foreach (var item in Model)
+{
+    @if (item.BookingStatus == "Booked")
+    {
+        <div class="modal fade" id="cancelModal-@item.BookingId" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form id="cancelForm-@item.BookingId" asp-action="CancelBooking" asp-route-id="@item.BookingId" method="post">
+                        <input type="hidden" name="status" value="@ViewData["CurrentStatus"]" />
+                        <input type="hidden" name="date" value="@ViewData["CurrentDate"]" />
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title" id="cancelModalLabel">Cancel Booking</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Are you sure you want to cancel this booking for <strong>@item.Room?.Building?.Building_Name - Room @item.Room?.RoomNumber</strong>?
+                            <div class="mt-3">
+                                <label for="remarks-@item.BookingId" class="form-label fw-bold">Remarks:</label>
+                                <textarea class="form-control" name="remarks" id="remarks-@item.BookingId" rows="2" placeholder="Reason for cancellation..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, Keep It</button>
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-danger" onclick="this.disabled=true; this.form.submit();">Yes, Cancel Booking</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+<!-- Room Status Modal Template (Hidden, cloned via JS or just one dynamic modal) -->
+<!-- Actually, let's make one dynamic modal to avoid cluttering the DOM with 100 modals -->
+<div class="modal fade" id="roomStatusModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="bi bi-clipboard-check me-2"></i>Room Status Checklist</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="roomStatusForm">
+                    <input type="hidden" id="rsBookingId" name="BookingId" />
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 50px;">S.No</th>
+                                <th>Properties</th>
+                                <th style="width: 80px;" class="text-center">Yes</th>
+                                <th style="width: 80px;" class="text-center">No</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @functions {
+                                public string CreateCheckRow(int sno, string label, string propName) {
+                                    return $@"
+                                    <tr>
+                                        <td>{sno}</td>
+                                        <td>{label}</td>
+                                        <td class='text-center'>
+                                            <input type='checkbox' class='form-check-input rs-check' data-group='{propName}' data-val='true' />
+                                        </td>
+                                        <td class='text-center'>
+                                            <input type='checkbox' class='form-check-input rs-check' data-group='{propName}' data-val='false' />
+                                        </td>
+                                    </tr>";
+                                }
+                            }
+                            @Html.Raw(CreateCheckRow(1, "Room cleaned", "RoomCleaned"))
+                            @Html.Raw(CreateCheckRow(2, "Bathroom cleaned", "BathroomCleaned"))
+                            @Html.Raw(CreateCheckRow(3, "Bed cleaned", "BedCleaned"))
+                            @Html.Raw(CreateCheckRow(4, "Water Bottles provided", "WaterBottlesProvided"))
+                            @Html.Raw(CreateCheckRow(5, "Bedsheet provided", "BedsheetProvided"))
+                            @Html.Raw(CreateCheckRow(6, "Towel Provided", "TowelProvided"))
+                            @Html.Raw(CreateCheckRow(7, "Dustbin cleaned", "DustbinCleaned"))
+                        </tbody>
+                    </table>
+                    <div class="mb-3">
+                        <label class="form-label">Remarks (Optional)</label>
+                        <textarea class="form-control" id="rsRemarks" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="submitRoomStatus()">Save Status</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Set Default Status to 'Booked' (Confirmed)
+        let currentStatus = '@ViewData["CurrentStatus"]' || 'Booked';
+
+        // Initialize on load
+        document.addEventListener("DOMContentLoaded", function () {
+            // Set current date from ViewData or default to today
+            const serverDate = '@ViewData["CurrentDate"]';
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('dateFilter').value = serverDate || today;
+
+            // Update active state of status buttons
+            document.querySelectorAll('.btn-filter').forEach(btn => {
+                if (btn.getAttribute('data-status') === currentStatus) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            // Apply filters (only status now)
+            applyFilters();
+            
+            // Checkbox logic for Room Status
+            document.querySelectorAll('.rs-check').forEach(chk => {
+                chk.addEventListener('change', function() {
+                    const group = this.getAttribute('data-group');
+                    const val = this.getAttribute('data-val'); // 'true' or 'false'
+                    
+                    if(this.checked) {
+                        // Uncheck the other one in the same group
+                        document.querySelectorAll(`.rs-check[data-group='${group}']`).forEach(other => {
+                            if(other !== this) other.checked = false;
+                        });
+                    }
+                });
+            });
+        });
+
+        function filterBookings(status, btn) {
+            currentStatus = status;
+            
+            // Update buttons state
+            document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            applyFilters();
+        }
+
+        function applyDateFilter() {
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const dateValue = document.getElementById('dateFilter').value;
+            const searchInput = document.getElementById('searchInput');
+            const searchValue = searchInput ? searchInput.value.toLowerCase() : '';
+            const cards = document.querySelectorAll('.booking-card');
+            
+            // 1. Update URL State
+            const newUrl = `${window.location.pathname}?status=${currentStatus}&date=${dateValue}`;
+            window.history.replaceState({path: newUrl}, '', newUrl);
+
+            // 2. Update Links and Forms to carry state
+            updateStatefulElements(currentStatus, dateValue);
+
+            cards.forEach(card => {
+                const status = card.getAttribute('data-status');
+                const cardDate = card.getAttribute('data-date'); // YYYY-MM-DD
+                const searchText = card.getAttribute('data-search-text').toLowerCase();
+                
+                // Status Logic
+                let statusMatch = (currentStatus === 'all') || (status === currentStatus);
+                
+                // Date Logic
+                let dateMatch = (dateValue === "") || (cardDate === dateValue);
+                
+                // Search Logic
+                let searchMatch = !searchValue || searchText.includes(searchValue);
+                
+                if (statusMatch && dateMatch && searchMatch) {
+                    card.style.display = 'block';
+                    // Re-trigger animation
+                    card.style.animation = 'none';
+                    card.offsetHeight; /* trigger reflow */
+                    card.style.animation = 'slideIn 0.5s ease-out'; 
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function updateStatefulElements(status, date) {
+            // Update Confirm Booking Links
+            document.querySelectorAll('a[href*="ConfirmBooking"]').forEach(a => {
+                // Parse current href to strip old params or append new ones?
+                // Easiest is to use URL object
+                try {
+                    // Create a dummy base if relative URL
+                    const url = new URL(a.getAttribute('href'), window.location.origin);
+                    url.searchParams.set('fromStatus', status);
+                    url.searchParams.set('fromDate', date);
+                    a.setAttribute('href', url.pathname + url.search);
+                } catch(e) {
+                    console.error("Error updating link", a, e);
+                }
+            });
+
+            // Update Cancel Forms
+            document.querySelectorAll('form[action*="CancelBooking"]').forEach(form => {
+                let statusInput = form.querySelector('input[name="status"]');
+                let dateInput = form.querySelector('input[name="date"]');
+                
+                if(statusInput) statusInput.value = status;
+                else {
+                    const i = document.createElement('input');
+                    i.type = 'hidden';
+                    i.name = 'status';
+                    i.value = status;
+                    form.appendChild(i);
+                }
+
+                if(dateInput) dateInput.value = date;
+                else {
+                    const i = document.createElement('input');
+                    i.type = 'hidden';
+                    i.name = 'date';
+                    i.value = date;
+                    form.appendChild(i);
+                }
+            });
+        }
+        
+        // Room Status Functions
+        const roomStatusModal = new bootstrap.Modal(document.getElementById('roomStatusModal'));
+        
+        function openRoomStatusModal(bookingId) {
+            document.getElementById('rsBookingId').value = bookingId;
+            // Clear checks
+            document.querySelectorAll('.rs-check').forEach(c => c.checked = false);
+            document.getElementById('rsRemarks').value = '';
+            
+            roomStatusModal.show();
+        }
+        
+        async function submitRoomStatus() {
+            const bookingId = document.getElementById('rsBookingId').value;
+            if(!bookingId) return;
+
+            const data = {
+                BookingId: parseInt(bookingId),
+                Remarks: document.getElementById('rsRemarks').value
+            };
+            
+            // Collect checkbox values
+            const props = ['RoomCleaned', 'BathroomCleaned', 'BedCleaned', 'WaterBottlesProvided', 'BedsheetProvided', 'TowelProvided', 'DustbinCleaned'];
+            
+            let allChecked = true;
+            
+            props.forEach(p => {
+                const yesBox = document.querySelector(`.rs-check[data-group='${p}'][data-val='true']`);
+                const noBox = document.querySelector(`.rs-check[data-group='${p}'][data-val='false']`);
+                
+                // If neither is checked, we default to false or handle validation?
+                // Assign true if yesBox checked, false otherwise
+                data[p] = yesBox.checked;
+            });
+            
+            // Post to Frontend Controller -> API
+            // Assuming I create a Frontend Controller 'RoomStatus'
+            
+            try {
+                const response = await fetch('/RoomStatus/Save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                         // Add Verification Token if needed, but usually automatically handled if sending form, here JSON
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if(response.ok) {
+                    alert('Room Status saved successfully!');
+                    roomStatusModal.hide();
+                } else {
+                    alert('Failed to save room status.');
+                }
+            } catch(e) {
+                console.error(e);
+                alert('Error submitting form.');
+            }
+        }
+    </script>
+<script src="~/js/CheckInCheckOut.js" asp-append-version="true"></script>
+}
+
+

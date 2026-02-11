@@ -1,0 +1,186 @@
+@model List<HotelRoomBookingAPI.Models.Web.ViewModels.Reports.MealDetailVM>
+
+@{
+    var mealType = ViewData["MealType"] as string;
+    var showAll = string.IsNullOrEmpty(mealType);
+    var showBreakfast = showAll || mealType!.Equals("Breakfast", StringComparison.OrdinalIgnoreCase);
+    var showLunch = showAll || mealType!.Equals("Lunch", StringComparison.OrdinalIgnoreCase);
+    var showDinner = showAll || mealType!.Equals("Dinner", StringComparison.OrdinalIgnoreCase);
+    
+    // Group by building
+    var buildingGroups = Model?.GroupBy(x => x.BuildingName).OrderBy(x => x.Key).ToList();
+}
+
+@if (buildingGroups != null && buildingGroups.Any())
+{
+    var totalBreakfast = Model.Count(x => x.IsBreakfast);
+    var totalLunch = Model.Count(x => x.IsLunch);
+    var totalDinner = Model.Count(x => x.IsDinner);
+
+    <div class="px-3 pt-3">
+        <!-- Grand Total Summary -->
+        <div class="alert alert-light border d-flex justify-content-center gap-4 align-items-center mb-3 shadow-sm">
+            <span class="fw-bold text-dark">Grand Total:</span>
+            
+            @if (showBreakfast)
+            {
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-cup-hot text-warning me-2"></i>
+                    <span class="fw-bold text-secondary me-2">Breakfast:</span> 
+                    <span class="badge bg-warning text-dark rounded-pill fs-6 px-3">@totalBreakfast</span>
+                </div>
+            }
+            
+            @if (showBreakfast && (showLunch || showDinner)) { <div class="vr"></div> }
+
+            @if (showLunch)
+            {
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-brightness-high text-warning me-2"></i>
+                    <span class="fw-bold text-secondary me-2">Lunch:</span> 
+                    <span class="badge bg-warning text-dark rounded-pill fs-6 px-3">@totalLunch</span>
+                </div>
+            }
+
+            @if (showLunch && showDinner) { <div class="vr"></div> }
+
+            @if (showDinner)
+            {
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-moon-stars text-primary me-2"></i>
+                    <span class="fw-bold text-secondary me-2">Dinner:</span> 
+                    <span class="badge bg-primary rounded-pill fs-6 px-3">@totalDinner</span>
+                </div>
+            }
+        </div>
+
+        <!-- Buildings Table -->
+        <div class="table-responsive">
+            <table class="table table-hover align-middle border mb-0 rounded-3 overflow-hidden">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Building Name</th>
+                         @if (showBreakfast) { <th class="text-center">Total Breakfast</th> }
+                         @if (showLunch) { <th class="text-center">Total Lunch</th> }
+                         @if (showDinner) { <th class="text-center">Total Dinner</th> }
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{ int groupIndex = 0; }
+                    @foreach (var group in buildingGroups)
+                    {
+                        var groupBreakfast = group.Count(x => x.IsBreakfast);
+                        var groupLunch = group.Count(x => x.IsLunch);
+                        var groupDinner = group.Count(x => x.IsDinner);
+                        var collapseId = "collapse-bldg-" + groupIndex;
+
+                        <tr class="fw-bold bg-light border-bottom">
+                            <td class="ps-4">@group.Key</td>
+                            @if (showBreakfast) { <td class="text-center"><span class="badge bg-warning text-dark rounded-pill fs-6 px-3">@groupBreakfast</span></td> }
+                            @if (showLunch) { <td class="text-center"><span class="badge bg-warning text-dark rounded-pill fs-6 px-3">@groupLunch</span></td> }
+                            @if (showDinner) { <td class="text-center"><span class="badge bg-primary rounded-pill fs-6 px-3">@groupDinner</span></td> }
+                            <td class="text-end pe-4">
+                                <button class="btn btn-sm btn-primary rounded-pill px-3" type="button" data-bs-toggle="collapse" data-bs-target="#@collapseId" aria-expanded="false" aria-controls="@collapseId">
+                                    <i class="bi bi-eye me-1"></i> View
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="@(2 + (showBreakfast?1:0) + (showLunch?1:0) + (showDinner?1:0))" class="p-0 border-0">
+                                <div class="collapse" id="@collapseId">
+                                    <div class="card card-body border-0 bg-white rounded-0 p-3 shadow-inner">
+                                        <h6 class="text-muted border-bottom pb-2 mb-3">Occupants in @group.Key</h6>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-bordered align-middle mb-0">
+                                                <thead class="bg-light text-secondary small">
+                                                    <tr>
+                                                        <th class="text-center" style="width: 50px;">S.No</th>
+                                                        <th>Name</th>
+                                                        <th>Room No</th>
+                                                        <th>Phone No</th>
+                                                        @if (showBreakfast) { <th class="text-center" style="width: 40px;">B</th> }
+                                                        @if (showLunch) { <th class="text-center" style="width: 40px;">L</th> }
+                                                        @if (showDinner) { <th class="text-center" style="width: 40px;">D</th> }
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @{ int sno = 1; }
+                                                    @foreach (var item in group)
+                                                    {
+                                                        if ((showBreakfast && item.IsBreakfast) || (showLunch && item.IsLunch) || (showDinner && item.IsDinner))
+                                                        {
+                                                            <tr>
+                                                                <td class="text-center small text-muted">@sno</td>
+                                                                <td class="fw-semibold">@item.FullName</td>
+                                                                <td><span class="badge bg-secondary">@item.RoomNumber</span></td>
+                                                                <td class="small">@item.PhoneNumber</td>
+                                                                
+                                                                @if (showBreakfast)
+                                                                {
+                                                                    <td class="text-center">
+                                                                        @if (item.IsBreakfast)
+                                                                        {
+                                                                            <span class="text-success"><i class="bi bi-check-circle-fill"></i></span>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <span class="text-muted opacity-25"><i class="bi bi-dash-circle"></i></span>
+                                                                        }
+                                                                    </td>
+                                                                }
+                                                                
+                                                                @if (showLunch)
+                                                                {
+                                                                    <td class="text-center">
+                                                                        @if (item.IsLunch)
+                                                                        {
+                                                                            <span class="text-success"><i class="bi bi-check-circle-fill"></i></span>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <span class="text-muted opacity-25"><i class="bi bi-dash-circle"></i></span>
+                                                                        }
+                                                                    </td>
+                                                                }
+                                                                
+                                                                @if (showDinner)
+                                                                {
+                                                                    <td class="text-center">
+                                                                        @if (item.IsDinner)
+                                                                        {
+                                                                            <span class="text-success"><i class="bi bi-check-circle-fill"></i></span>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <span class="text-muted opacity-25"><i class="bi bi-dash-circle"></i></span>
+                                                                        }
+                                                                    </td>
+                                                                }
+                                                            </tr>
+                                                            sno++;
+                                                        }
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        groupIndex++;
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+else
+{
+    <div class="text-center p-5 text-muted">
+        <i class="bi bi-person-x fs-1 opacity-50"></i>
+        <p class="mt-3 fs-5">No meal records found for this selection.</p>
+    </div>
+}
+
+

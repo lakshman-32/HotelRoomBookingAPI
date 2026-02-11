@@ -1,0 +1,284 @@
+@model IEnumerable<HotelRoomBookingAPI.Models.Web.User>
+@using System.Security.Claims
+
+@{
+    ViewData["Title"] = "Registered Users";
+    var currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+}
+
+<style>
+
+    
+    .create-admin-card {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        margin-bottom: 30px;
+    }
+    
+    .users-table-container {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    }
+    
+    .users-table {
+        margin: 0;
+    }
+    
+    .users-table thead {
+        background: rgb(189, 215, 238);
+    }
+    
+    .users-table thead th {
+        color: black;
+        font-weight: 700;
+        padding: 20px;
+        border: none;
+    }
+    
+    .users-table tbody td {
+        padding: 18px 20px;
+        vertical-align: middle;
+        color: #4a5568;
+    }
+    
+    .users-table tbody tr {
+        transition: all 0.3s ease;
+        border-bottom: 1px solid #f7fafc;
+    }
+    
+    .users-table tbody tr:hover {
+        background: rgba(79, 172, 254, 0.05);
+    }
+    
+    .role-badge {
+        padding: 8px 18px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 13px;
+        display: inline-block;
+    }
+    
+    .role-admin {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+    }
+    
+    .role-user {
+        background: rgb(189, 215, 238);
+        color: black;
+        box-shadow: none;
+    }
+    
+    .btn-promote {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+        border: none;
+        padding: 6px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-promote:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(17, 153, 142, 0.4);
+        color: white;
+    }
+    
+    .btn-demote {
+        background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        color: white;
+        border: none;
+        padding: 6px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-demote:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(235, 51, 73, 0.4);
+        color: white;
+    }
+    
+    .btn-create-admin {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 12px;
+        font-weight: 700;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-create-admin:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(17, 153, 142, 0.4);
+        color: white;
+    }
+</style>
+
+<div class="container d-flex justify-content-between align-items-center mb-4 mt-4">
+    <h2 class="fw-bold mb-0">User Management</h2>
+</div>
+
+<div class="container">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    
+    <!-- Create New User Form -->
+    <div class="create-admin-card">
+        <h4 class="mb-4"><i class="bi bi-person-plus-fill"></i> Create New User</h4>
+        <form asp-action="CreateUser" method="post">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <input type="text" name="FullName" class="form-control" placeholder="Full Name" required />
+                </div>
+                <div class="col-md-3">
+                    <input type="email" name="Email" class="form-control" placeholder="Email" required />
+                </div>
+                <div class="col-md-2">
+                    <div class="input-group">
+                        <input type="password" name="Password" id="userPassword" class="form-control" placeholder="Password" required minlength="6" />
+                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                 <div class="col-md-2">
+                    <select name="RoleId" class="form-select" required>
+                        <option value="2" selected>User</option>
+                        <option value="1">Admin</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <input type="text" name="CompanyName" class="form-control" placeholder="Company (Optional)" />
+                </div>
+                <div class="col-md-12 mt-3 text-end">
+                    <button type="submit" class="btn btn-create-admin px-5">
+                        <i class="bi bi-plus-circle"></i> Create User
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    @if (!Model.Any())
+    {
+        <div class="users-table-container">
+            <div class="no-users">
+                <i class="bi bi-person-x"></i>
+                <h4>No Users Found</h4>
+                <p>There are no registered users in the system yet.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="users-table-container" style="max-height: 600px; overflow-y: auto;">
+            <table class="table users-table mb-0">
+                <thead style="position: sticky; top: 0; z-index: 10;">
+                    <tr>
+                        <th>S.No</th>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>Company</th>
+                        <th>Role</th>
+                        <th style="width: 200px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int index = 1;
+                    }
+                    @foreach (var user in Model)
+                    {
+                        <tr>
+                            <td>@index</td>
+                            <td>@user.FullName</td>
+                            <td>@user.Email</td>
+                            <td>@(string.IsNullOrEmpty(user.CompanyName) ? "-" : user.CompanyName)</td>
+                            <td>
+                                @if (user.RoleId == 1)
+                                {
+                                    <span class="role-badge role-admin">Admin</span>
+                                }
+                                else
+                                {
+                                    <span class="role-badge role-user">User</span>
+                                }
+                            </td>
+                            <td>
+                                @if (user.RoleId == 1)
+                                {
+                                    @* Admin user - show demote button (unless it's current user) *@
+                                    @if (user.UserId != currentUserId)
+                                    {
+                                        <form asp-action="DemoteFromAdmin" asp-route-id="@user.UserId" method="post" style="display: inline;" onsubmit="return confirm('Are you sure you want to demote this user from Admin?');">
+                                            <button type="submit" class="btn btn-demote">
+                                                <i class="bi bi-arrow-down-circle"></i> Demote
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted" style="font-size: 12px;">Current User</span>
+                                    }
+                                }
+                                else
+                                {
+                                    @* Non-admin user - show promote button *@
+                                    <form asp-action="PromoteToAdmin" asp-route-id="@user.UserId" method="post" style="display: inline;" onsubmit="return confirm('Are you sure you want to promote this user to Admin?');">
+                                        <button type="submit" class="btn btn-promote">
+                                            <i class="bi bi-arrow-up-circle"></i> Promote to Admin
+                                        </button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                        index++;
+                    }
+                </tbody>
+            </table>
+        </div>
+
+<script>
+    document.getElementById('togglePassword').addEventListener('click', function () {
+        const passwordInput = document.getElementById('userPassword');
+        const icon = this.querySelector('i');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+        }
+    });
+</script>
+    }
+</div>
+
+

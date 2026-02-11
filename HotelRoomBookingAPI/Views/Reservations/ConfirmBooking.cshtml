@@ -1,0 +1,971 @@
+@model HotelRoomBookingAPI.Models.Web.ViewModels.ConfirmBookingViewModel
+
+@{
+    ViewData["Title"] = "Manage Occupants";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-check-circle-fill text-success me-2"></i>Booking Details</h2>
+        <a asp-controller="Reservations" asp-action="MyBookings" 
+           asp-route-status="@ViewData["FromStatus"]" 
+           asp-route-date="@ViewData["FromDate"]"
+           class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to My Bookings
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row">
+        <!-- Left Column: Room & Booking Details -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0"><i class="bi bi-house-door me-2"></i>Room Information</h5>
+                </div>
+                <div class="card-body">
+                    <h4 class="card-title text-primary mb-3">
+                        @if (Model.Booking.Room != null)
+                        {
+                            @:Room @Model.Booking.Room.RoomNumber
+                        }
+                    </h4>
+                    
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span class="text-muted">Building</span>
+                            <span class="fw-medium">@(Model.Booking.Room?.Building?.Building_Name ?? "N/A")</span>
+                        </li>
+                         <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span class="text-muted">Floor</span>
+                            <span class="fw-medium">@(Model.Booking.Room?.Floor?.Description ?? "N/A")</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span class="text-muted">Type</span>
+                            <span class="badge bg-info text-dark">@(Model.Booking.Room?.RoomType?.RoomTypeName ?? "N/A")</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span class="text-muted">Capacity</span>
+                            <span class="fw-medium">@(Model.Booking.Room?.RoomType?.Capacity.ToString() ?? "N/A") Persons</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span class="text-muted">Status</span>
+                            <span class="badge @(Model.Booking.BookingStatus == "Booked" ? "bg-success" : "bg-secondary")">
+                                @Model.Booking.BookingStatus
+                            </span>
+                        </li>
+                    </ul>
+
+                    <hr />
+                    
+                    <h6 class="text-muted mb-2">Booking Slot</h6>
+                    <div class="alert alert-light border">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-calendar-check text-primary me-2"></i>
+                            <div>
+                                <small class="text-muted d-block">Check-In</small>
+                                <strong>@Model.Booking.CheckInDate.ToShortDateString()</strong>
+                                @if (Model.Booking.BookingStartDateTime.HasValue)
+                                {
+                                    <span class="ms-1">@Model.Booking.BookingStartDateTime.Value.ToShortTimeString()</span>
+                                }
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-calendar-x text-danger me-2"></i>
+                            <div>
+                                <small class="text-muted d-block">Check-Out</small>
+                                <strong>@Model.Booking.CheckOutDate.ToShortDateString()</strong>
+                                @if (Model.Booking.BookingEndDateTime.HasValue)
+                                {
+                                    <span class="ms-1">@Model.Booking.BookingEndDateTime.Value.ToShortTimeString()</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Occupants Management -->
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <h5 class="card-title mb-0"><i class="bi bi-people me-2"></i>Occupants</h5>
+                    <div class="d-flex align-items-center">
+                        <form asp-action="UpdateClientType" method="post" class="d-flex align-items-center me-3" id="clientTypeForm">
+                             <input type="hidden" name="bookingId" value="@Model.Booking.BookingId" />
+                             <input type="hidden" name="fromStatus" value="@ViewData["FromStatus"]" />
+                             <input type="hidden" name="fromDate" value="@ViewData["FromDate"]" />
+                             <select name="clientKindId" id="ddlClientType" class="form-select form-select-sm" style="min-width: 150px;">
+                                 <option value="">-- Select Client Type --</option>
+                                    @foreach(var kind in Model.ClientKinds) {
+                                        <option value="@kind.ClientKindId" selected="@(Model.Booking.ClientKindId == kind.ClientKindId)">@kind.ClientKindName</option>
+                                    }
+                             </select>
+                        </form>
+                        <span class="badge bg-primary rounded-pill px-3 py-2">
+                            Occupied Count: <span id="occupantCount">@Model.Occupants.Count</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    
+                    <!-- Add Occupant Form -->
+                    <div class="card bg-light border-0 mb-4">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-3 text-muted">Add New Occupant</h6>
+                            <form asp-action="AddOccupant" method="post" id="addOccupantForm">
+                                <input type="hidden" asp-for="NewOccupant.BookingId" />
+                                <input type="hidden" name="fromStatus" value="@ViewData["FromStatus"]" />
+                                <input type="hidden" name="fromDate" value="@ViewData["FromDate"]" />
+                                <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
+
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <label asp-for="NewOccupant.FullName" class="form-label small text-muted">Full Name</label>
+                                        <input asp-for="NewOccupant.FullName" class="form-control form-control-sm" placeholder="John Doe" />
+                                        <span asp-validation-for="NewOccupant.FullName" class="text-danger small"></span>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label asp-for="NewOccupant.PhoneNumber" class="form-label small text-muted">Phone Number</label>
+                                        <div class="input-group input-group-sm flex-nowrap">
+                                            <select class="form-select" id="ddlCountryCode">
+                                                <!-- Populated via JS -->
+                                            </select>
+                                            <input type="text" id="txtPhoneBody" class="form-control" placeholder="Phone Number" maxlength="15" />
+                                            <input type="hidden" asp-for="NewOccupant.PhoneNumber" id="hdnFullPhoneNumber" />
+                                        </div>
+                                        <span asp-validation-for="NewOccupant.PhoneNumber" class="text-danger small" id="phoneValidationMsg"></span>
+                                        <div id="phoneHelp" class="form-text small" style="font-size: 0.75rem;"></div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label asp-for="NewOccupant.AadhaarNumber" class="form-label small text-muted">Aadhaar Number</label>
+                                        <input asp-for="NewOccupant.AadhaarNumber" id="NewOccupant_AadhaarNumber" class="form-control form-control-sm" placeholder="12 Digit Aadhaar" maxlength="12" />
+                                        <span asp-validation-for="NewOccupant.AadhaarNumber" class="text-danger small"></span>
+                                    </div>
+                                    
+                                    <div class="col-12 mt-2 d-flex justify-content-between align-items-center">
+                                         <div>
+                                             @{
+                                                 var checkIn = Model.Booking.CheckInDate.Date;
+                                                 var checkOut = Model.Booking.CheckOutDate.Date;
+                                                 var totalDays = (checkOut - checkIn).Days + 1; // Inclusive
+                                             }
+
+                                             @if (totalDays > 1)
+                                             {
+                                                 <label class="form-label small text-muted d-block mb-1">Daily Meal Plan <span class="badge bg-light text-dark border ms-2">@totalDays Days</span></label>
+                                                 <div class="table-responsive border rounded-3 mb-2" style="max-height: 200px; overflow-y: auto;">
+                                                     <table class="table table-sm table-borderless mb-0 small">
+                                                         <thead class="table-light sticky-top">
+                                                             <tr>
+                                                                 <th class="ps-3">Date</th>
+                                                                 <th class="text-center">
+                                                                     <div class="form-check d-inline-block min-h-0 mb-0">
+                                                                         <input type="checkbox" class="form-check-input" id="checkAllBreakfast" onclick="toggleAllMeals('Breakfast')" />
+                                                                         <label class="form-check-label fw-bold" for="checkAllBreakfast">Breakfast</label>
+                                                                     </div>
+                                                                 </th>
+                                                                 <th class="text-center">
+                                                                     <div class="form-check d-inline-block min-h-0 mb-0">
+                                                                         <input type="checkbox" class="form-check-input" id="checkAllLunch" onclick="toggleAllMeals('Lunch')" />
+                                                                         <label class="form-check-label fw-bold" for="checkAllLunch">Lunch</label>
+                                                                     </div>
+                                                                 </th>
+                                                                 <th class="text-center">
+                                                                     <div class="form-check d-inline-block min-h-0 mb-0">
+                                                                         <input type="checkbox" class="form-check-input" id="checkAllDinner" onclick="toggleAllMeals('Dinner')" />
+                                                                         <label class="form-check-label fw-bold" for="checkAllDinner">Dinner</label>
+                                                                     </div>
+                                                                 </th>
+                                                             </tr>
+                                                         </thead>
+                                                         <tbody>
+                                                             @for (int i = 0; i < totalDays; i++)
+                                                             {
+                                                                 var currentDate = checkIn.AddDays(i);
+                                                                 <tr>
+                                                                     <td class="ps-3 align-middle text-muted">
+                                                                         @currentDate.ToString("MMM dd, ddd")
+                                                                         <input type="hidden" name="NewOccupant.DailyMeals[@i].Date" value="@currentDate.ToString("yyyy-MM-dd")" />
+                                                                     </td>
+                                                                     <td class="text-center">
+                                                                         <input type="checkbox" class="form-check-input meal-check-breakfast" name="NewOccupant.DailyMeals[@i].HasBreakfast" value="true" data-date="@currentDate.ToString("yyyy-MM-dd")" data-meal-type="Breakfast" />
+                                                                     </td>
+                                                                     <td class="text-center">
+                                                                         <input type="checkbox" class="form-check-input meal-check-lunch" name="NewOccupant.DailyMeals[@i].HasLunch" value="true" data-date="@currentDate.ToString("yyyy-MM-dd")" data-meal-type="Lunch" />
+                                                                     </td>
+                                                                     <td class="text-center">
+                                                                         <input type="checkbox" class="form-check-input meal-check-dinner" name="NewOccupant.DailyMeals[@i].HasDinner" value="true" data-date="@currentDate.ToString("yyyy-MM-dd")" data-meal-type="Dinner" />
+                                                                     </td>
+                                                                 </tr>
+                                                             }
+                                                         </tbody>
+                                                     </table>
+                                                 </div>
+                                             }
+                                             else
+                                             {
+                                                 <label class="form-label small text-muted d-block mb-1">Meals Required</label>
+                                                 <div class="form-check form-check-inline">
+                                                     <input asp-for="NewOccupant.HasBreakfast" class="form-check-input meal-single-check" type="checkbox" data-date="@checkIn.ToString("yyyy-MM-dd")" data-meal-type="Breakfast" />
+                                                     <label asp-for="NewOccupant.HasBreakfast" class="form-check-label">Breakfast</label>
+                                                 </div>
+                                                 <div class="form-check form-check-inline">
+                                                     <input asp-for="NewOccupant.HasLunch" class="form-check-input meal-single-check" type="checkbox" data-date="@checkIn.ToString("yyyy-MM-dd")" data-meal-type="Lunch" />
+                                                     <label asp-for="NewOccupant.HasLunch" class="form-check-label">Lunch</label>
+                                                 </div>
+                                                 <div class="form-check form-check-inline">
+                                                     <input asp-for="NewOccupant.HasDinner" class="form-check-input meal-single-check" type="checkbox" data-date="@checkIn.ToString("yyyy-MM-dd")" data-meal-type="Dinner" />
+                                                     <label asp-for="NewOccupant.HasDinner" class="form-check-label">Dinner</label>
+                                                 </div>
+                                             }
+                                         </div>
+                                         
+                                         <button type="submit" class="btn btn-primary btn-sm px-4" title="Add Occupant">
+                                             <i class="bi bi-plus-lg me-1"></i> Add
+                                         </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Occupants List -->
+                    @if (Model.Occupants.Count > 0)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col" style="width: 5%">S.No</th>
+                                        <th scope="col">Name</th>
+                                        <th scope="col">Phone</th>
+                                        <th scope="col">Aadhaar (Masked)</th>
+                                        <th scope="col">Meals</th>
+                                        <th scope="col" class="text-end">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int i = 0; i < Model.Occupants.Count; i++)
+                                    {
+                                        var occupant = Model.Occupants[i];
+                                        <tr>
+                                            <th scope="row">@(i + 1)</th>
+                                            <td class="fw-medium">@occupant.FullName</td>
+                                            <td>@occupant.PhoneNumber</td>
+                                            <td>
+                                                <span class="badge bg-secondary font-monospace">
+                                                    <i class="bi bi-shield-lock-fill me-1"></i>@occupant.AadhaarLast4
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @if(occupant.HasBreakfast) { <span class="badge bg-warning text-dark me-1" title="Breakfast"><i class="bi bi-cup-hot-fill"></i> B</span> }
+                                                @if(occupant.HasLunch) { <span class="badge bg-success me-1" title="Lunch"><i class="bi bi-brightness-high-fill"></i> L</span> }
+                                                @if(occupant.HasDinner) { <span class="badge bg-dark me-1" title="Dinner"><i class="bi bi-moon-stars-fill"></i> D</span> }
+                                            </td>
+                                            <td class="text-end">
+                                                <button type="button" class="btn btn-outline-primary btn-sm rounded-circle p-2 lh-1 me-1 model-occupant-data" 
+                                                        onclick='openEditMealsModal(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(occupant)))'
+                                                        title="Edit Meals">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <form asp-action="RemoveOccupant" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to remove this occupant?');">
+                                                    <input type="hidden" name="id" value="@occupant.BookingOccupantId" />
+                                                    <input type="hidden" name="bookingId" value="@occupant.BookingId" />
+                                                    <input type="hidden" name="fromStatus" value="@ViewData["FromStatus"]" />
+                                                    <input type="hidden" name="fromDate" value="@ViewData["FromDate"]" />
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-circle p-2 lh-1" title="Remove">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-person-plus display-4 mb-3 d-block opacity-50"></i>
+                            <p>No occupants added yet.</p>
+                        </div>
+                    }
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <style>
+        /* Fix for Select2 inside Input Group */
+        .input-group > .select2-container--bootstrap-5 {
+            width: 35% !important; /* Force width */
+            flex: 0 0 auto;
+        }
+        .input-group > .select2-container--bootstrap-5 .select2-selection {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        .input-group > #txtPhoneBody {
+             width: 65% !important;
+        }
+    </style>
+
+    <!-- Edit Meals Modal -->
+    <div class="modal fade" id="editMealsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Meals</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="hdnEditOccupantId" />
+                    <div id="editMealsContainer"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="saveMealChanges()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function openEditMealsModal(occupant) {
+             document.getElementById('hdnEditOccupantId').value = occupant.BookingOccupantId;
+             var container = document.getElementById('editMealsContainer');
+             container.innerHTML = '';
+             
+             // Table Structure
+             var table = document.createElement('table');
+             table.className = 'table table-sm table-bordered text-center align-middle';
+             
+             // Display Occupant Name
+             var nameHeader = document.createElement('h6');
+             nameHeader.className = 'mb-3 fw-bold text-primary';
+             nameHeader.textContent = "Occupant: " + (occupant.FullName || "Guest");
+             container.appendChild(nameHeader);
+
+             table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Breakfast (7:00-10:30)</th>
+                        <th>Lunch (11:30-15:00)</th>
+                        <th>Dinner (19:00-22:00)</th>
+                    </tr>
+                </thead>
+                <tbody id="editMealsTableBody"></tbody>
+             `;
+             container.appendChild(table);
+             
+             var tbody = table.querySelector('tbody');
+             
+             // Time Checks
+             var now = new Date();
+             // Current time in decimal hours (e.g. 14.5 for 2:30 PM)
+             var currentHour = now.getHours() + (now.getMinutes() / 60.0);
+             var todayStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
+
+             // Ranges (Hours)
+             var bStart = 7.0, bEnd = 10.5;
+             var lStart = 11.5, lEnd = 15.0;
+             var dStart = 19.0, dEnd = 22.0;
+
+             if(occupant.DailyMeals && occupant.DailyMeals.length > 0) {
+                 occupant.DailyMeals.forEach(meal => {
+                     var tr = document.createElement('tr');
+                     // Resolve ID/Date (Handle Casing)
+                     var mId = meal.Id || meal.id;
+                     var mDate = meal.Date || meal.date;
+
+                     // Fix Date Format (dd/MM/yyyy)
+                     var dateParts = meal.Date.split('T')[0].split('-');
+                     var dateStr = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+                     var mealDateStr = meal.Date.split('T')[0];
+                     var isToday = (mealDateStr === todayStr);
+
+                     tr.appendChild(createCell(dateStr)); 
+
+                     // Helper for cells
+                     function createMealCell(hasMeal, isOnRequest, isCancelled, start, end, type) {
+                         var td = document.createElement('td');
+                         var wrapper = document.createElement('div');
+                         // Refined Layout: Row-wise straight line, centered
+                         wrapper.className = 'd-flex flex-row align-items-center justify-content-center gap-3';
+                         
+                         // 1. PLANNED MEAL INDICATOR (Tick or Cross)
+                         // Wrap in span to easily toggle replacement
+                         var statusWrapper = document.createElement('span');
+                         
+                         // Active State: Checkbox
+                         var mainCb = document.createElement('input');
+                         mainCb.type = 'checkbox';
+                         mainCb.className = 'form-check-input meal-cb shadow-none bg-primary border-primary'; 
+                         mainCb.checked = hasMeal;
+                         mainCb.disabled = true; 
+                         mainCb.dataset.type = type;
+                         mainCb.dataset.id = mId; 
+                         mainCb.dataset.date = mDate; 
+                         
+                         // Cancelled State: Red Text/Icon
+                         var cancelledBadge = document.createElement('span');
+                         cancelledBadge.className = 'badge bg-danger-subtle text-danger border border-danger fw-normal';
+                         cancelledBadge.textContent = 'Cancelled';
+                         cancelledBadge.style.display = 'none';
+
+                         statusWrapper.appendChild(mainCb);
+                         statusWrapper.appendChild(cancelledBadge);
+                         wrapper.appendChild(statusWrapper);
+
+                         // Helper to toggle visual state
+                         function updateVisualState(isCancelledNow) {
+                             if(isCancelledNow) {
+                                 mainCb.style.display = 'none';
+                                 cancelledBadge.style.display = 'inline-block';
+                                 // Update dataset for persistence
+                                 mainCb.dataset.cancelled = "true";
+                             } else {
+                                 mainCb.style.display = 'inline-block';
+                                 cancelledBadge.style.display = 'none';
+                                 mainCb.dataset.cancelled = "false";
+                             }
+                         }
+                         
+                         // Initialize State
+                         updateVisualState(isCancelled);
+
+                         // 2. CANCEL OPTION (Red Cross Control)
+                         if(hasMeal) {
+                             var cancelCb = document.createElement('input');
+                             cancelCb.type = 'checkbox';
+                             cancelCb.className = 'btn-check cancel-cb';
+                             cancelCb.id = `cancel-${mId}-${type}`;
+                             cancelCb.dataset.type = type;
+
+                             cancelCb.onclick = function(e) {
+                                 if (this.checked) {
+                                     // Cancel Action
+                                     if (confirm('Are you sure you want to cancel this meal?')) {
+                                          updateVisualState(true);
+                                     } else {
+                                          e.preventDefault();
+                                          this.checked = false;
+                                     }
+                                 } else {
+                                     // Un-Cancel Action (Restore)
+                                     updateVisualState(false);
+                                     // Optional: confirm restore? No, usually safe.
+                                 }
+                             };
+                             
+                             var cancelLbl = document.createElement('label');
+                             cancelLbl.className = 'btn btn-outline-danger btn-sm p-0 px-1';
+                             cancelLbl.htmlFor = `cancel-${mId}-${type}`;
+                             cancelLbl.innerHTML = '<i class="bi bi-x-lg"></i>';
+                             cancelLbl.title = "Cancel Meal";
+
+                             // Validation: 2.5h buffer
+                             var canCancel = false;
+                             var bufferHours = 2.5;
+                             var cutoffTime = start - bufferHours;
+                             
+                             if (mealDateStr > todayStr) {
+                                 canCancel = true; 
+                             } else if (isToday) {
+                                 if (currentHour < cutoffTime) {
+                                     canCancel = true;
+                                 }
+                             }
+
+                             if(!canCancel && !isCancelled) {
+                                 cancelCb.disabled = true;
+                                 cancelLbl.classList.add('disabled', 'opacity-50');
+                                 cancelLbl.title = "Cancellation window closed (2.5h before)";
+                             }
+                             
+                             if(isCancelled) {
+                                 cancelCb.checked = true;
+                             }
+                             
+                             wrapper.appendChild(cancelCb);
+                             wrapper.appendChild(cancelLbl);
+                         }
+
+                         // 3. NEED OPTION (Green Check)
+                         if(!hasMeal) {
+                             var needCb = document.createElement('input');
+                             needCb.type = 'checkbox';
+                             needCb.className = 'btn-check need-cb';
+                             needCb.id = `need-${mId}-${type}`;
+                             needCb.dataset.type = type;
+                             
+                             var needLbl = document.createElement('label');
+                             needLbl.className = 'btn btn-outline-success btn-sm p-0 px-1';
+                             needLbl.htmlFor = `need-${mId}-${type}`;
+                             needLbl.innerHTML = '<i class="bi bi-check-lg"></i>'; 
+                             needLbl.title = "Arrange Meal (On Request)";
+
+                             // Validation: Within mealtime
+                             var canArrange = false;
+                             if (isToday) {
+                                 if (currentHour >= start && currentHour <= end) {
+                                     canArrange = true;
+                                 }
+                             }
+                             
+                             if(!canArrange) {
+                                 needCb.disabled = true;
+                                 needLbl.classList.add('disabled', 'opacity-50');
+                                 needLbl.title = "Arrangement only available during meal service hours";
+                             }
+                             
+                             if(isOnRequest) {
+                                 needCb.checked = true;
+                             }
+                             
+                             wrapper.appendChild(needCb);
+                             wrapper.appendChild(needLbl);
+                         }
+
+                         td.appendChild(wrapper);
+                         return td;
+                     }
+
+                     tr.appendChild(createMealCell(meal.HasBreakfast, meal.IsBreakfastOnRequest, (meal.IsBreakfastCancelled||meal.isBreakfastCancelled), bStart, bEnd, 'Breakfast'));
+                     tr.appendChild(createMealCell(meal.HasLunch, meal.IsLunchOnRequest, (meal.IsLunchCancelled||meal.isLunchCancelled), lStart, lEnd, 'Lunch'));
+                     tr.appendChild(createMealCell(meal.HasDinner, meal.IsDinnerOnRequest, (meal.IsDinnerCancelled||meal.isDinnerCancelled), dStart, dEnd, 'Dinner'));
+                     
+                     tbody.appendChild(tr);
+                 });
+             } else {
+                 container.innerHTML = '<p class="text-muted text-center">No daily meal details available.</p>';
+             }
+
+             new bootstrap.Modal(document.getElementById('editMealsModal')).show();
+        }
+
+        function createCell(text) {
+            var td = document.createElement('td');
+            td.textContent = text;
+            return td;
+        }
+
+        function saveMealChanges() {
+            var inputRows = document.querySelectorAll('#editMealsTableBody tr');
+            var occupantId = document.getElementById('hdnEditOccupantId').value;
+            var updates = [];
+
+            if (!occupantId) {
+                alert("Error: Occupant ID not found.");
+                return;
+            }
+            if (inputRows.length === 0) {
+                 alert("Error: No meal rows found.");
+                 return;
+            }
+
+            inputRows.forEach(row => {
+                var someCb = row.querySelector('input[type="checkbox"]');
+                if(!someCb) return;
+                var id = someCb.dataset.id;
+                var dateVal = someCb.dataset.date;
+                
+                var bMain = row.querySelector('input[data-type="Breakfast"].meal-cb');
+                var bCancel = row.querySelector('#cancel-' + id + '-Breakfast');
+                var bNeed = row.querySelector('#need-' + id + '-Breakfast');
+                
+                var lMain = row.querySelector('input[data-type="Lunch"].meal-cb');
+                var lCancel = row.querySelector('#cancel-' + id + '-Lunch');
+                var lNeed = row.querySelector('#need-' + id + '-Lunch');
+                
+                var dMain = row.querySelector('input[data-type="Dinner"].meal-cb');
+                var dCancel = row.querySelector('#cancel-' + id + '-Dinner');
+                var dNeed = row.querySelector('#need-' + id + '-Dinner');
+
+                // Logic to determine final state:
+                // If Cancel Checked -> HasMeal = false
+                // If Need Checked -> HasMeal = true, IsOnReq = true
+                // Else -> Keep Checkbox state (which is fixed to original)
+
+                function resolveState(mainCb, cancelCb, needCb) {
+                    var hasMeal = mainCb.checked;
+                    var isOnReq = false;
+                    // Default from dataset
+                    var isCancelled = (mainCb.dataset.cancelled === 'true');
+
+                    if(cancelCb && cancelCb.checked) {
+                        hasMeal = false;
+                        isCancelled = true;
+                    }
+                    if(needCb && needCb.checked) {
+                        hasMeal = true;
+                        isOnReq = true;
+                        isCancelled = false;
+                    }
+                    return { hasMeal, isOnReq, isCancelled };
+                }
+
+                var bState = resolveState(bMain, bCancel, bNeed);
+                var lState = resolveState(lMain, lCancel, lNeed);
+                var dState = resolveState(dMain, dCancel, dNeed);
+
+                updates.push({
+                    Id: parseInt(id) || 0,
+                    Date: dateVal,
+                    HasBreakfast: bState.hasMeal,
+                    IsBreakfastOnRequest: bState.isOnReq,
+                    IsBreakfastCancelled: bState.isCancelled,
+                    HasLunch: lState.hasMeal,
+                    IsLunchOnRequest: lState.isOnReq,
+                    IsLunchCancelled: lState.isCancelled,
+                    HasDinner: dState.hasMeal,
+                    IsDinnerOnRequest: dState.isOnReq,
+                    IsDinnerCancelled: dState.isCancelled
+                });
+            });
+
+            if(updates.length === 0) {
+                alert("Debug: Updates array is empty. Logic loop failed.");
+                return;
+            }
+            // alert("Sending updates: " + JSON.stringify(updates)); // Debug Payload - Removed
+            
+            fetch(`/api/Bookings/occupants/${occupantId}/meals`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updates)
+            })
+            .then(async response => {
+                if(response.ok) {
+                    alert('Meals updated successfully!');
+                    var modalEl = document.getElementById('editMealsModal');
+                    var modal = bootstrap.Modal.getInstance(modalEl);
+                    modal.hide();
+                    window.location.reload(); // Reload to reflect changes
+                } else {
+                    var txt = await response.text();
+                    alert('Failed to save changes. Status: ' + response.status + ' Details: ' + txt);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Error processing request.');
+            });
+        }
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Country Data (Code, Name, MinLen, MaxLen)
+            var countries = [
+                { code: "+91", name: "India", len: 10 },
+                { code: "+1", name: "USA/Canada", len: 10 },
+                { code: "+44", name: "UK", len: 10 },
+                { code: "+61", name: "Australia", len: 9 },
+                { code: "+81", name: "Japan", len: 10 },
+                { code: "+33", name: "France", len: 9 },
+                { code: "+49", name: "Germany", len: 10 },
+                { code: "+971", name: "UAE", len: 9 },
+                { code: "+86", name: "China", len: 11 },
+                { code: "+7", name: "Russia", len: 10 },
+                { code: "+55", name: "Brazil", len: 11 },
+                { code: "+39", name: "Italy", len: 10 },
+                { code: "+82", name: "South Korea", len: 10 },
+                { code: "+34", name: "Spain", len: 9 },
+                { code: "+65", name: "Singapore", len: 8 },
+                { code: "+60", name: "Malaysia", len: 9 },
+                { code: "+66", name: "Thailand", len: 9 },
+                { code: "+62", name: "Indonesia", len: 10 },
+                { code: "+966", name: "Saudi Arabia", len: 9 },
+                { code: "+20", name: "Egypt", len: 10 },
+                { code: "+27", name: "South Africa", len: 9 },
+                { code: "+52", name: "Mexico", len: 10 },
+                { code: "+31", name: "Netherlands", len: 9 },
+                { code: "+41", name: "Switzerland", len: 9 },
+                { code: "+46", name: "Sweden", len: 9 },
+                 // Add more as needed
+                { code: "+94", name: "Sri Lanka", len: 9 },
+                { code: "+92", name: "Pakistan", len: 10 },
+                { code: "+880", name: "Bangladesh", len: 10 }
+            ];
+
+            // Initialize Select2
+            var $ddlCountry = $('#ddlCountryCode');
+            countries.forEach(function(c) {
+                var option = new Option(c.code + " (" + c.name + ")", c.code, false, c.code === "+91");
+                $(option).attr('data-len', c.len);
+                $ddlCountry.append(option);
+            });
+
+            $ddlCountry.select2({
+                theme: "bootstrap-5",
+                width: '100%',
+                dropdownAutoWidth: true
+            });
+
+            // Mobile Number Input Logic
+            var phoneBodyInput = document.getElementById('txtPhoneBody');
+            var fullPhoneInput = document.getElementById('hdnFullPhoneNumber');
+            var helpText = document.getElementById('phoneHelp');
+            var validationMsg = document.getElementById('phoneValidationMsg');
+
+            function updateValidation() {
+                 var selectedData = $ddlCountry.select2('data')[0];
+                 var element = $ddlCountry.find(':selected');
+                 var requiredLen = element.data('len') || 10; // Default to 10 if unknown
+                 var currentCode = $ddlCountry.val();
+                 var currentBody = phoneBodyInput.value;
+                 
+                 // Update Help Text
+                 helpText.textContent = "Enter " + requiredLen + " digits";
+                 
+                 // Strict Length Limit
+                 phoneBodyInput.setAttribute('maxlength', requiredLen);
+
+                 // Dynamic Validation Visuals
+                 if (currentBody.length > 0 && currentBody.length !== parseInt(requiredLen)) {
+                      validationMsg.textContent = "Enter exactly " + requiredLen + " digits";
+                      phoneBodyInput.classList.add('is-invalid');
+                 } else {
+                      validationMsg.textContent = "";
+                      phoneBodyInput.classList.remove('is-invalid');
+                 }
+
+                 updateFullPhoneNumber();
+            }
+
+            // 1. Only allow numbers in the body
+            if (phoneBodyInput) {
+                phoneBodyInput.addEventListener('input', function(e) {
+                     this.value = this.value.replace(/[^0-9]/g, '');
+                     updateValidation();
+                });
+            }
+
+            // Sync on Select2 Change
+            $ddlCountry.on('change', function() {
+                updateValidation();
+                // Clear validation if empty
+                if(phoneBodyInput.value === '') {
+                     validationMsg.textContent = "";
+                     phoneBodyInput.classList.remove('is-invalid');
+                }
+            });
+
+            function updateFullPhoneNumber() {
+                if (phoneBodyInput && fullPhoneInput) {
+                    fullPhoneInput.value = $ddlCountry.val() + " " + phoneBodyInput.value;
+                }
+            }
+
+            // Input Preservation for Client Type Change
+            var clientTypeSelect = document.getElementById('ddlClientType');
+            var fullNameInput = document.querySelector('input[name="NewOccupant.FullName"]');
+            // phoneBodyInput is already defined above
+            // aadhaarInput is defined below, let's hoist it or use it here
+            var aadhaarInputRef = document.getElementById('NewOccupant_AadhaarNumber');
+            
+            // Restore functionality from SessionStorage
+            const savedData = sessionStorage.getItem('occupantFormData');
+            if (savedData) {
+                try {
+                    const data = JSON.parse(savedData);
+                    
+                    if(fullNameInput) fullNameInput.value = data.fullName || '';
+                    if(phoneBodyInput) {
+                         phoneBodyInput.value = data.phoneBody || '';
+                         phoneBodyInput.dispatchEvent(new Event('input')); 
+                    }
+                    if(aadhaarInputRef) aadhaarInputRef.value = data.aadhaar || '';
+                    
+                    // Clear after restore
+                    sessionStorage.removeItem('occupantFormData');
+                } catch(e) {
+                    console.error("Error restoring form data", e);
+                }
+            }
+
+            // Save functionality on Change
+            if(clientTypeSelect) {
+                clientTypeSelect.addEventListener('change', function() {
+                    const data = {
+                        fullName: fullNameInput ? fullNameInput.value : '',
+                        phoneBody: phoneBodyInput ? phoneBodyInput.value : '',
+                        aadhaar: aadhaarInputRef ? aadhaarInputRef.value : ''
+                    };
+                    sessionStorage.setItem('occupantFormData', JSON.stringify(data));
+                    
+                    // Submit the form
+                    this.form.submit();
+                });
+            }
+            
+            // Initialization Logic existing...
+            if (fullPhoneInput && fullPhoneInput.value) {
+                var currentVal = fullPhoneInput.value.trim();
+                // Try to find matching code
+                var matched = countries.find(c => currentVal.startsWith(c.code + " "));
+                
+                if (matched) {
+                     $ddlCountry.val(matched.code).trigger('change');
+                     phoneBodyInput.value = currentVal.substring(matched.code.length).trim();
+                } else if (currentVal.length > 0) {
+                     // Fallback, try to split by space
+                     var parts = currentVal.split(' ');
+                     if(parts.length > 1) {
+                         // Check if part[0] exists in options
+                         var code = parts[0];
+                         if(countries.some(c => c.code === code)) {
+                              $ddlCountry.val(code).trigger('change');
+                              phoneBodyInput.value = currentVal.substring(code.length).trim();
+                         }
+                     }
+                }
+            }
+
+            // Aadhaar Number Validation (Only Numbers)
+            // aadhaarInputRef is already defined above
+            if (aadhaarInputRef) {
+                aadhaarInputRef.addEventListener('input', function(e) {
+                    this.value = this.value.replace(/[^0-9]/g, '');
+                });
+            }
+            
+            // Toggle All Meals
+             window.toggleAllMeals = function(type) {
+                 var master = document.getElementById('checkAll' + type);
+                 var checkboxes = document.querySelectorAll('.meal-check-' + type.toLowerCase());
+                 
+                 checkboxes.forEach(function(cb) {
+                     if (!cb.disabled) {
+                        cb.checked = master.checked;
+                     }
+                 });
+             };
+
+            // Time-Based Meal Restriction
+            function disableExpiredMealOptions() {
+                var now = new Date();
+                var todayStr = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, '0') + "-" + String(now.getDate()).padStart(2, '0');
+                var currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+                // Checkout Date/Time from Server
+                var checkOutDateStr = "@Model.Booking.CheckOutDate.ToString("yyyy-MM-dd")";
+                var checkOutTimeMinutes = @(Model.Booking.BookingEndDateTime.HasValue ? (Model.Booking.BookingEndDateTime.Value.Hour * 60 + Model.Booking.BookingEndDateTime.Value.Minute) : 1440); // Default to end of day if null
+
+                
+                // Cutoffs (End Times) for "Today"
+                var cutoffs = {
+                    'Breakfast': 630,  // 10:30
+                    'Lunch': 900,      // 15:00
+                    'Dinner': 1320     // 22:00
+                };
+
+                // Start Times for "Checkout Day"
+                // If Checkout Time is BEFORE this, you can't have the meal.
+                var startTimes = {
+                    'Breakfast': 420,  // 07:00
+                    'Lunch': 690,      // 11:30
+                    'Dinner': 1140     // 19:00
+                };
+
+                var checkboxes = document.querySelectorAll('input[type="checkbox"][data-date][data-meal-type]');
+                
+                checkboxes.forEach(function(cb) {
+                    var dateVal = cb.getAttribute('data-date');
+                    var type = cb.getAttribute('data-meal-type');
+                    
+                    if (!type || !dateVal) return;
+                    
+                    // 1. Check Past Dates
+                    if (dateVal < todayStr) {
+                        cb.disabled = true;
+                        cb.checked = false;
+                        return;
+                    }
+
+                    // 2. Check "Today" Time Limits (Booking/Ordering Window)
+                    if (dateVal === todayStr) {
+                        var cutoff = cutoffs[type];
+                        if (cutoff && currentMinutes > cutoff) {
+                            cb.disabled = true;
+                            cb.checked = false;
+                             if(cb.nextElementSibling && cb.nextElementSibling.tagName === 'LABEL') {
+                                 cb.nextElementSibling.title = type + " time has passed";
+                             }
+                        }
+                    }
+
+                    // 3. Check "Checkout Day" Restrictions (Presence Window)
+                    if (dateVal === checkOutDateStr) {
+                        var startTime = startTimes[type];
+                        // If Checkout is at 11:00 (660), and Lunch starts at 11:30 (690). 660 < 690. Disabled.
+                        if (startTime && checkOutTimeMinutes < startTime) {
+                            cb.disabled = true;
+                            cb.checked = false;
+                             if(cb.nextElementSibling && cb.nextElementSibling.tagName === 'LABEL') {
+                                 cb.nextElementSibling.title = "Checkout is before " + type + " starts";
+                             }
+                        }
+                    }
+                });
+            }
+
+            disableExpiredMealOptions();
+            // Re-run periodically just in case the page sits open for a long time
+            setInterval(disableExpiredMealOptions, 60000);
+
+             // Client Type Validation // ... existing code ...
+            var addOccupantForm = document.getElementById('addOccupantForm');
+            if (addOccupantForm) {
+                addOccupantForm.addEventListener('submit', function(e) {
+                    var ddlClientType = document.getElementById('ddlClientType');
+                    if (ddlClientType && ddlClientType.value === "") {
+                        e.preventDefault();
+                        alert("Please select a Client Type before adding occupants.");
+                        ddlClientType.focus();
+                        // Highlight the dropdown
+                        ddlClientType.classList.add('is-invalid');
+                    }
+                });
+            }
+            
+            // Remove error highlight on change
+             var ddlClientType = document.getElementById('ddlClientType');
+             if (ddlClientType) {
+                 ddlClientType.addEventListener('change', function() {
+                     this.classList.remove('is-invalid');
+                 });
+             }
+        });
+    </script>
+}
+
+

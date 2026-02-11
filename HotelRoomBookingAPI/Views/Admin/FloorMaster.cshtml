@@ -1,0 +1,395 @@
+@model IEnumerable<HotelRoomBookingAPI.Models.Web.Floor>
+
+@{
+    ViewData["Title"] = "Floor Master";
+    int rowNo = 1;
+    var buildings = ViewBag.Buildings as List<HotelRoomBookingAPI.Models.Web.BuildingsMaster>;
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Floor Master</h2>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFloorModal">
+            <i class="bi bi-plus-circle"></i> Add
+        </button>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped table-hover table-master-header">
+            <thead>
+                <tr>
+                    <th>S.No</th>
+                    <th>Building Name</th>
+                    <th>Floor No</th>
+                    <th>Floor Name</th>
+                    <th>Total Rooms</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@(rowNo++)</td>
+                            <td>@(item.BuildingsMaster?.Building_Name ?? "N/A")</td>
+                            <td>@item.FloorNumber</td>
+                            <td>@item.Description</td>
+                            <td>@item.No_of_rooms</td>
+                            <td>
+                                 <button class="btn btn-sm btn-info" 
+                                        onclick="openViewModal(@item.FloorId, '@(item.BuildingsMaster?.Building_Name ?? "N/A")', @item.FloorNumber, '@item.Description')">
+                                    View
+                                </button>
+                                <button class="btn btn-sm btn-warning" 
+                                        onclick="openEditModal(@item.FloorId, @item.Building_ID, @item.FloorNumber, '@item.Description', @item.No_of_rooms)">
+                                    Edit
+                                </button>
+                                <form asp-action="DeleteFloor" asp-route-id="@item.FloorId" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this floor?');">
+                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center">No floors found.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Floor Modal -->
+<div class="modal fade" id="addFloorModal" tabindex="-1" aria-labelledby="addFloorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="AddFloor" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addFloorModalLabel">Add Floor</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    
+                    <div class="mb-3">
+                        <label for="Building_ID" class="form-label">Building_Name</label>
+                        <select class="form-select" name="Building_ID" required>
+                            <option value="">Select Building</option>
+                            @if (buildings != null)
+                            {
+                                foreach (var b in buildings)
+                                {
+                                    <option value="@b.Building_ID">@b.Building_Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="FloorNumber" class="form-label">Floor_No</label>
+                        <input type="number" class="form-control" name="FloorNumber" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Description" class="form-label">Floor_Name</label>
+                        <input type="text" class="form-control" name="Description" placeholder="e.g. Ground Floor, First Floor" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="No_of_rooms" class="form-label">Total_Rooms</label>
+                        <input type="number" class="form-control" name="No_of_rooms" required min="1">
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Floor Modal -->
+<div class="modal fade" id="editFloorModal" tabindex="-1" aria-labelledby="editFloorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="EditFloor" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editFloorModalLabel">Edit Floor</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="FloorId" id="edit_FloorId">
+                    
+                    <div class="mb-3">
+                        <label for="edit_Building_ID" class="form-label">Building_Name</label>
+                        <select class="form-select" name="Building_ID" id="edit_Building_ID" required>
+                            <option value="">Select Building</option>
+                            @if (buildings != null)
+                            {
+                                foreach (var b in buildings)
+                                {
+                                    <option value="@b.Building_ID">@b.Building_Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit_FloorNumber" class="form-label">Floor_No</label>
+                        <input type="number" class="form-control" name="FloorNumber" id="edit_FloorNumber" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit_Description" class="form-label">Floor_Name</label>
+                        <input type="text" class="form-control" name="Description" id="edit_Description" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit_No_of_rooms" class="form-label">Total_Rooms</label>
+                        <input type="number" class="form-control" name="No_of_rooms" id="edit_No_of_rooms" required min="1">
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- View Rooms Modal -->
+<div class="modal fade" id="viewRoomsModal" tabindex="-1" aria-labelledby="viewRoomsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title" id="viewRoomsModalLabel">Floor Rooms</h5>
+                    <div id="viewModalSubtitle" class="text-muted small mt-1"></div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                     <table class="table table-bordered text-center" id="roomsTable">
+                         <thead class="sticky-top bg-white">
+                             <tr>
+                                 <th style="width: 75px;">S.No</th>
+                                 <th style="width: 120px;">RoomNo</th>
+                                 <th style="width: 120px;">Room ID</th>
+                                 <th style="width: 130px;">RoomType</th>
+                                 <th style="width: 80px;">Capacity</th>
+                             </tr>
+                         </thead>
+                         <tbody id="roomsTableBody">
+                             <!-- Rows loaded via JS -->
+                         </tbody>
+                     </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="saveRooms()">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var roomTypes = [];
+
+    // Fetch Room Types on load
+    fetch('/Admin/GetRoomTypes')
+        .then(response => response.json())
+        .then(data => { roomTypes = data; });
+
+    function openEditModal(id, buildingId, floorNo, name, rooms) {
+        document.getElementById('edit_FloorId').value = id;
+        document.getElementById('edit_Building_ID').value = buildingId;
+        document.getElementById('edit_FloorNumber').value = floorNo;
+        document.getElementById('edit_Description').value = name;
+        document.getElementById('edit_No_of_rooms').value = rooms;
+        
+        var myModal = new bootstrap.Modal(document.getElementById('editFloorModal'));
+        myModal.show();
+    }
+
+    function openViewModal(floorId, buildingName, floorNo, floorName) {
+        // Update Title
+        var subtitle = document.getElementById('viewModalSubtitle');
+        subtitle.innerHTML = '<div style="font-size: 1.2rem; margin-bottom: 8px;"><strong style="color: #0d6efd;">Building Name:</strong> <span style="color: #0d6efd; font-weight: 600;">' + buildingName + '</span></div>' + 
+                             '<div style="font-size: 1.2rem;"><strong style="color: #198754;">Floor:</strong> <span style="color: #198754; font-weight: 600;">' + floorNo + ' / ' + floorName + '</span></div>';
+
+        var tbody = document.getElementById('roomsTableBody');
+        tbody.innerHTML = '<tr><td colspan="5">Loading...</td></tr>'; 
+        
+        var myModal = new bootstrap.Modal(document.getElementById('viewRoomsModal'));
+        myModal.show();
+
+        // Fetch Rooms
+        fetch('/Admin/GetFloorRooms?floorId=' + floorId)
+            .then(response => response.json())
+            .then(rooms => {
+                tbody.innerHTML = '';
+                if(rooms.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5">No rooms configured for this floor.</td></tr>';
+                    return;
+                }
+
+                rooms.forEach((room, index) => {
+                    var tr = document.createElement('tr');
+                    
+                    // S.No
+                    var tdSno = document.createElement('td');
+                    tdSno.innerText = index + 1;
+                    tr.appendChild(tdSno);
+
+                    // RoomNo
+                    var tdNo = document.createElement('td');
+                    tdNo.innerText = room.roomNumber; 
+                    tr.appendChild(tdNo);
+
+                    // Room ID (empty text box)
+                    var tdRoomId = document.createElement('td');
+                    var inputRoomId = document.createElement('input');
+                    inputRoomId.type = "text";
+                    inputRoomId.className = "form-control form-control-sm room-id-input";
+                    inputRoomId.placeholder = "";
+                    tdRoomId.appendChild(inputRoomId);
+                    tr.appendChild(tdRoomId);
+
+                    // RoomType Dropdown
+                    var tdType = document.createElement('td');
+                    var select = document.createElement('select');
+                    select.className = "form-select form-select-sm room-type-select";
+                    select.dataset.roomId = room.roomId;
+                    
+                    // Populate options
+                    if(roomTypes.length > 0){
+                        roomTypes.forEach(rt => {
+                            var opt = document.createElement('option');
+                            opt.value = rt.roomTypeId;
+                            opt.text = rt.roomTypeName;
+                            // Add capacity to dataset for easy lookup
+                            opt.dataset.capacity = rt.capacity;
+                            
+                            // User requirement manual override check logic for capacity display if needed
+                            // But for now, we bind standard
+                            
+                            if(rt.roomTypeId == room.roomTypeId) opt.selected = true;
+                            select.appendChild(opt);
+                        });
+                    }
+                    
+                    // On Change Logic for Capacity
+                    select.addEventListener('change', function() {
+                        var selectedOpt = this.options[this.selectedIndex];
+                        var typeName = selectedOpt.text.toLowerCase();
+                        var cap = 0;
+                        
+                        // User Requirement Rule
+                        if(typeName.includes('single')) cap = 1;
+                        else if(typeName.includes('double')) cap = 2;
+                        else if(typeName.includes('deluxe')) cap = 3;
+                        else if(typeName.includes('family')) cap = 4;
+                        else cap = selectedOpt.dataset.capacity || 0;
+
+                        // Find the capacity input in the same row
+                        var row = this.closest('tr');
+                        var capInput = row.querySelector('.capacity-input');
+                        if(capInput) capInput.value = cap;
+                    });
+                    
+                    tdType.appendChild(select);
+                    tr.appendChild(tdType);
+
+                    // Capacity (Read-only)
+                    var tdCap = document.createElement('td');
+                    var inputCap = document.createElement('input');
+                    inputCap.type = "text";
+                    inputCap.className = "form-control form-control-sm capacity-input text-center";
+                    inputCap.readOnly = true;
+                    
+                    // Initial Calculation
+                    var currentType = room.roomType ? room.roomType.roomTypeName.toLowerCase() : "";
+                    var initCap = 0;
+                    if(currentType.includes('single')) initCap = 1;
+                    else if(currentType.includes('double')) initCap = 2;
+                    else if(currentType.includes('deluxe')) initCap = 3;
+                    else if(currentType.includes('family')) initCap = 4;
+                    else if(room.roomType) initCap = room.roomType.capacity;
+                    
+                    inputCap.value = initCap;
+                    tdCap.appendChild(inputCap);
+                    tr.appendChild(tdCap);
+
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(err => {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-danger">Error loading rooms</td></tr>';
+                console.error(err);
+            });
+    }
+
+    function saveRooms() {
+        var selects = document.getElementsByClassName('room-type-select');
+        var updates = [];
+        
+        for (var i = 0; i < selects.length; i++) {
+            var select = selects[i];
+            updates.push({
+                roomId: parseInt(select.dataset.roomId),
+                roomTypeId: parseInt(select.value)
+            });
+        }
+
+        if (updates.length === 0) return;
+
+        fetch('/Admin/SaveFloorRooms', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updates)
+        })
+        .then(response => {
+            if (response.ok) {
+                alert("Room details saved successfully!");
+                var myModalEl = document.getElementById('viewRoomsModal');
+                var modal = bootstrap.Modal.getInstance(myModalEl);
+                modal.hide();
+            } else {
+                response.text().then(text => alert("Failed to save: " + text));
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Error sending request.");
+        });
+    }
+</script>
+
+

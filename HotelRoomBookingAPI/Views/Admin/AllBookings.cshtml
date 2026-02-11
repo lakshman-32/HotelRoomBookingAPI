@@ -1,0 +1,511 @@
+@model IEnumerable<HotelRoomBookingAPI.Models.Web.Booking>
+
+@{
+    ViewData["Title"] = "All Bookings";
+}
+
+<style>
+    .bookings-admin-header {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        padding: 30px 0;
+        margin: -20px -15px 40px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .bookings-admin-header h1 {
+        color: white;
+        font-size: 2rem;
+        font-weight: 800;
+        text-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        margin: 0;
+    }
+    
+    .bookings-table-container {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    }
+    
+    .bookings-table {
+        margin: 0;
+    }
+    
+    .bookings-table thead {
+        background: rgb(189, 215, 238);
+    }
+    
+    .bookings-table thead th {
+        color: black;
+        font-weight: 700;
+        padding: 20px;
+        border: none;
+    }
+    
+    .bookings-table tbody td {
+        padding: 18px 20px;
+        vertical-align: middle;
+        color: #4a5568;
+    }
+    
+    .bookings-table tbody tr {
+        transition: all 0.3s ease;
+        border-bottom: 1px solid #f7fafc;
+    }
+    
+    .bookings-table tbody tr:hover {
+        background: rgba(17, 153, 142, 0.05);
+    }
+    
+    .status-badge {
+        padding: 8px 18px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 13px;
+        display: inline-block;
+    }
+    
+    .status-booked {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+    }
+    
+    .status-checkedin {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .status-cancelled {
+        background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(235, 51, 73, 0.3);
+    }
+    
+    .no-bookings {
+        text-align: center;
+        padding: 60px 20px;
+        color: #718096;
+    }
+    
+    .no-bookings i {
+        font-size: 4rem;
+        color: #cbd5e0;
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="container d-flex justify-content-between align-items-center mb-4 mt-4">
+    <h2 class="fw-bold mb-0">All Bookings</h2>
+</div>
+
+
+
+<div class="container mb-3">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <input type="text" id="searchInput" class="form-control" placeholder="Search by Name, Building name, Room no..." />
+        </div>
+        <div class="col-md-3">
+            <select id="statusFilter" class="form-select">
+                <option value="">All Statuses</option>
+                <option value="Confirmed">Confirmed</option>
+                <option value="Checked In">Checked In</option>
+                <option value="Cancelled">Cancelled</option>
+                <option value="Checked Out">Checked Out</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <input type="date" id="dateFilter" class="form-control" title="Filter by Check-In Date" />
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    @if (!Model.Any())
+    {
+        <div class="bookings-table-container">
+            <div class="no-bookings">
+                <i class="bi bi-inbox"></i>
+                <h4>No Bookings Found</h4>
+                <p>There are no bookings in the system yet.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="bookings-table-container">
+            <table class="table bookings-table mb-0" id="bookingsTable">
+                <thead>
+                    <tr>
+                        <th>S.No</th>
+                        <th>User</th>
+                        <th>Building</th>
+                        <th>Room</th>
+                        <th>Check-In</th>
+                        <th>Check-Out</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int index = 1;
+                    }
+                    @foreach (var booking in Model)
+                    {
+                        <tr data-search="@booking.User?.FullName @booking.User?.Email @booking.Room?.RoomNumber @booking.Room?.Building?.Building_Name @booking.BookingStatus"
+                            data-checkin="@booking.CheckInDate.ToString("yyyy-MM-dd")">
+                            <td>@index</td>
+                            <td>
+                                <div class="fw-bold">@booking.User?.FullName</div>
+                                <div class="small text-muted">@booking.User?.Email</div>
+                            </td>
+                            <td>@booking.Room?.Building?.Building_Name</td>
+                            <td>Room @booking.Room?.RoomNumber</td>
+                            <td>
+                                @booking.CheckInDate.ToString("MMM dd, yyyy")
+                                @if (booking.BookingStartDateTime.HasValue)
+                                {
+                                    <div class="small text-muted"><i class="bi bi-clock me-1"></i>@booking.BookingStartDateTime.Value.ToString("hh:mm tt")</div>
+                                }
+                            </td>
+                            <td>
+                                @booking.CheckOutDate.ToString("MMM dd, yyyy")
+                                @if (booking.BookingEndDateTime.HasValue)
+                                {
+                                    <div class="small text-muted"><i class="bi bi-clock me-1"></i>@booking.BookingEndDateTime.Value.ToString("hh:mm tt")</div>
+                                }
+                            </td>
+                            <td>
+                                @{
+                                    var hasOccupants = booking.Occupants != null && booking.Occupants.Any();
+                                    string displayStatus = booking.BookingStatus;
+                                    string badgeClass = "status-other";
+
+                                    if (hasOccupants && booking.Occupants?.Any(o => o.IsCheckedIn && !o.IsCheckedOut) == true)
+                                    {
+                                        displayStatus = "Checked In";
+                                        badgeClass = "status-checkedin";
+                                    }
+                                    else if (hasOccupants && booking.Occupants?.All(o => o.IsCheckedOut) == true)
+                                    {
+                                        displayStatus = "Checked Out";
+                                        badgeClass = "status-other"; // Or status-checkedout if defined, user said "checked out" status
+                                        // "if all the occupants were checkedout then only it should be checked out"
+                                        // implied: visible status "Checked Out"
+                                    }
+                                    else if (booking.BookingStatus == "Booked")
+                                    {
+                                        displayStatus = "Confirmed";
+                                        badgeClass = "status-booked";
+                                    }
+                                    else if (booking.BookingStatus == "Cancelled")
+                                    {
+                                        displayStatus = "Cancelled";
+                                        badgeClass = "status-cancelled";
+                                    }
+                                }
+                                <span class="status-badge @badgeClass">@displayStatus</span>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="viewOccupants(@booking.BookingId, this)" 
+                                        data-remarks="@booking.CancellationRemarks" 
+                                        data-client-type="@(booking.ClientKind?.ClientKindName ?? "Standard")"
+                                        title="View Occupants">
+                                    <i class="bi bi-people"></i> View
+                                </button>
+                            </td>
+                        </tr>
+                        index++;
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<!-- Occupants Modal -->
+<div class="modal fade" id="occupantsModal" tabindex="-1">
+    <div class="modal-dialog modal-xl" style="max-width: 60%;">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-people me-2"></i>Occupants List</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="occupantsLoading" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2 text-muted">Loading occupants...</p>
+                </div>
+                <div id="occupantsContent" style="display:none;">
+                    <div class="d-flex align-items-center mb-3 px-1">
+                        <h6 class="mb-0 text-primary fw-bold me-2">Occupants Details</h6>
+                        <span id="clientTypeBadge" class="badge bg-info text-dark" style="font-size: 0.9rem;"></span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>S.No</th>
+                                    <th>Name</th>
+                                    <th>Aadhaar No</th>
+                                    <th>Phone</th>
+                                    <th>Status</th>
+                                    <th style="min-width: 120px;">Checked-In</th>
+                                    <th style="min-width: 120px;">Checked-Out</th>
+                                    <th>Meals</th>
+                                </tr>
+                            </thead>
+                            <tbody id="occupantsTableBody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="remarksSection" class="mt-3 p-3 bg-light border rounded" style="display:none;">
+                    <h6 class="text-danger fw-bold"><i class="bi bi-info-circle-fill me-2"></i>Cancellation/Booking Remarks</h6>
+                    <p id="remarksText" class="mb-0 text-muted fst-italic"></p>
+                </div>
+
+                <div id="noOccupantsMessage" class="text-center py-4 text-muted" style="display:none;">
+                    <i class="bi bi-person-x display-4"></i>
+                    <p>No occupants found for this booking.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Filter Logic
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const statusFilter = document.getElementById('statusFilter');
+            const dateFilter = document.getElementById('dateFilter');
+            const tableRows = document.querySelectorAll('#bookingsTable tbody tr');
+
+            // Set default date to today
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            dateFilter.value = `${year}-${month}-${day}`;
+            
+            // Trigger initial filter
+            setTimeout(filterRows, 100); 
+
+            function filterRows() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const statusTerm = statusFilter.value.toLowerCase();
+                const dateTerm = dateFilter.value;
+
+                tableRows.forEach(row => {
+                    const searchData = row.getAttribute('data-search').toLowerCase();
+                    const checkinData = row.getAttribute('data-checkin');
+                    
+                    // Status check (simplified based on rendered badge text)
+                    const badgeText = row.querySelector('.status-badge').textContent.toLowerCase();
+                    
+                    // Matches
+                    const matchesSearch = searchData.includes(searchTerm);
+                    // Updated status match to check the VISIBLE status text (badgeText)
+                    const matchesStatus = statusTerm === '' || badgeText.includes(statusTerm); 
+                    const matchesDate = dateTerm === '' || checkinData === dateTerm;
+
+                    if (matchesSearch && matchesStatus && matchesDate) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            }
+
+            searchInput.addEventListener('input', filterRows);
+            statusFilter.addEventListener('change', filterRows);
+            dateFilter.addEventListener('change', filterRows);
+        });
+
+        // View Occupants Logic
+        function viewOccupants(bookingId, btn) {
+            const modal = new bootstrap.Modal(document.getElementById('occupantsModal'));
+            const loading = document.getElementById('occupantsLoading');
+            const content = document.getElementById('occupantsContent');
+            const noData = document.getElementById('noOccupantsMessage');
+            const tbody = document.getElementById('occupantsTableBody');
+            const remarksSection = document.getElementById('remarksSection');
+            const remarksText = document.getElementById('remarksText');
+
+            modal.show();
+            
+            loading.style.display = 'block';
+            content.style.display = 'none';
+            noData.style.display = 'none';
+            tbody.innerHTML = '';
+            
+            if (remarksSection) remarksSection.style.display = 'none';
+
+            // Show Remarks if exist
+            const remarks = btn ? btn.getAttribute('data-remarks') : '';
+            const clientType = btn ? btn.getAttribute('data-client-type') : 'Standard';
+            
+            const clientTypeBadge = document.getElementById('clientTypeBadge');
+            if (clientTypeBadge) {
+                clientTypeBadge.textContent = clientType;
+                // Optional: Change color based on type if needed
+                if (clientType === 'VIP') clientTypeBadge.className = 'badge bg-warning text-dark';
+                else if (clientType === 'Corporate') clientTypeBadge.className = 'badge bg-primary';
+                else clientTypeBadge.className = 'badge bg-secondary'; // Default/Standard
+            }
+
+            if (remarks && remarks !== "") {
+                if(remarksText) remarksText.textContent = remarks;
+                if(remarksSection) remarksSection.style.display = 'block';
+            } else {
+                 console.log('No remarks found or empty string.');
+            }
+
+            fetch(`/Admin/GetOccupants?bookingId=${bookingId}`)
+                .then(response => response.json())
+                .then(data => {
+                    loading.style.display = 'none';
+                    if (data && data.length > 0) {
+                        content.style.display = 'block';
+                        data.forEach((occupant, index) => {
+                            let statusBadge = '<span class="badge bg-warning text-dark">Pending</span>';
+                            if (occupant.isCheckedOut) {
+                                statusBadge = '<span class="badge bg-secondary">Checked Out</span>';
+                            } else if (occupant.isCheckedIn) {
+                                statusBadge = '<span class="badge bg-success">Checked In</span>';
+                            }
+
+                            // Format Times
+                            // Helper to format ISO date string to Date & Time
+                            const formatTime = (dateStr) => {
+                                if(!dateStr) return '<span class="text-muted small">-</span>';
+                                const d = new Date(dateStr);
+                                const datePart = d.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
+                                const timePart = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                                return `<div>${datePart}</div><div class="small opacity-75">${timePart}</div>`;
+                            };
+
+                            const checkInTimeDisplay = occupant.isCheckedIn 
+                                ? `<div class="text-success">${formatTime(occupant.checkInTime)}</div>` 
+                                : '<span class="text-muted small">-</span>';
+                                
+                            const checkOutTimeDisplay = occupant.isCheckedOut
+                                ? `<div class="text-dark">${formatTime(occupant.checkOutTime)}</div>`
+                                : '<span class="text-muted small">-</span>';
+
+                            // Meal Display Logic
+                            let mealsHtml = '';
+                            let detailRow = '';
+
+                            if (occupant.dailyMeals && occupant.dailyMeals.length > 1) {
+                                // Multi-day: Show Button
+                                const targetId = `meals-detail-${occupant.bookingOccupantId}`;
+                                mealsHtml = `<button class="btn btn-sm btn-outline-info" onclick="toggleMealDetails('${targetId}')">
+                                                <i class="bi bi-eye"></i> View Details
+                                             </button>`;
+                                
+                                // Build Detail Row
+                                const rows = occupant.dailyMeals.map(dm => {
+                                    // Format Date: "Feb 02, Mon"
+                                    const dateObj = new Date(dm.date);
+                                    const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: '2-digit', weekday: 'short' });
+                                    
+                                    const checkIcon = '<i class="bi bi-check-circle-fill text-success"></i>';
+                                    const dashIcon = '<span class="text-muted"><i class="bi bi-dash-lg"></i></span>';
+                                    
+                                    return `<tr>
+                                        <td>${dateStr}</td>
+                                        <td class="text-center">${dm.hasBreakfast ? checkIcon : dashIcon}</td>
+                                        <td class="text-center">${dm.hasLunch ? checkIcon : dashIcon}</td>
+                                        <td class="text-center">${dm.hasDinner ? checkIcon : dashIcon}</td>
+                                    </tr>`;
+                                }).join('');
+
+                                detailRow = `
+                                    <tr id="${targetId}" style="display:none; background-color: #f8f9fa;">
+                                        <td colspan="8">
+                                            <div class="p-3 border rounded shadow-sm bg-white my-2 mx-auto" style="max-width: 600px;">
+                                                <h6 class="mb-3 text-primary"><i class="bi bi-calendar-week me-2"></i>Daily Meal Plan</h6>
+                                                <table class="table table-sm table-bordered mb-0">
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th>Date</th>
+                                                            <th class="text-center">Breakfast</th>
+                                                            <th class="text-center">Lunch</th>
+                                                            <th class="text-center">Dinner</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        ${rows}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+
+                            } else {
+                                // Single-day or Legacy: Show Badges
+                                // Breakfast: Yellow/Orange, Cup Icon
+                                if (occupant.hasBreakfast) {
+                                    mealsHtml += `<span class="badge bg-warning text-dark me-1" title="Breakfast"><i class="bi bi-cup-hot-fill me-1"></i>B</span>`;
+                                }
+                                // Lunch: Green, Sun Icon
+                                if (occupant.hasLunch) {
+                                    mealsHtml += `<span class="badge bg-success me-1" title="Lunch"><i class="bi bi-sun-fill me-1"></i>L</span>`;
+                                }
+                                // Dinner: Dark, Moon Icon
+                                if (occupant.hasDinner) {
+                                    mealsHtml += `<span class="badge bg-dark me-1" title="Dinner"><i class="bi bi-moon-stars-fill me-1"></i>D</span>`;
+                                }
+                                if (mealsHtml === '') mealsHtml = '<span class="text-muted small">None</span>';
+                            }
+
+
+                            const row = `
+                                <tr>
+                                    <td class="text-black">${index + 1}</td>
+                                    <td><div class="fw-bold">${occupant.fullName}</div></td>
+                                    <td><span class="text-black">${occupant.aadhaarLast4 || '-'}</span></td>
+                                    <td>${occupant.phoneNumber}</td>
+                                    <td>${statusBadge}</td>
+                                    <td>${checkInTimeDisplay}</td>
+                                    <td>${checkOutTimeDisplay}</td>
+                                    <td>${mealsHtml}</td>
+                                </tr>
+                                ${detailRow}
+                            `;
+                            tbody.innerHTML += row;
+                        });
+                    } else {
+                        noData.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    loading.style.display = 'none';
+                    noData.innerHTML = '<p class="text-danger">Error loading occupants.</p>';
+                    noData.style.display = 'block';
+                });
+        }
+
+        const toggleMealDetails = (id) => {
+            const row = document.getElementById(id);
+            if (row.style.display === 'none') {
+                row.style.display = 'table-row';
+            } else {
+                row.style.display = 'none';
+            }
+        };
+    </script>
+}
+
+

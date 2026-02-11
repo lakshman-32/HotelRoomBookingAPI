@@ -1,0 +1,146 @@
+@model HotelRoomBookingAPI.Controllers.Web.MealsDashboardViewModel
+@{
+    ViewData["Title"] = "Meals Dashboard";
+    Layout = "_Layout";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header & Filter -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">Meals Overview</h2>
+            <p class="text-muted small mb-0">Daily meal preparation statistics</p>
+        </div>
+        <form method="get" class="d-flex align-items-center gap-2">
+            <label class="small fw-semibold text-muted">Filter Date:</label>
+            <input type="date" name="date" class="form-control form-control-sm" value="@Model.Date.ToString("yyyy-MM-dd")" onchange="this.form.submit()" />
+        </form>
+    </div>
+
+    <!-- Cards Row -->
+    <div class="row g-4 mb-4">
+        <!-- 1. Planned Meals -->
+        <div class="col-md-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-calendar-check fs-3 text-primary"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="card-subtitle text-muted small text-uppercase fw-bold">Planned Meals</h6>
+                            <h2 class="card-title fw-bold mb-0">@Model.TotalPlanned</h2>
+                        </div>
+                    </div>
+                    <ul class="list-group list-group-flush small">
+                        <li class="list-group-item d-flex justify-content-between px-0 py-1 border-0">
+                            <span><i class="bi bi-cup-hot me-2 text-warning"></i>Breakfast</span>
+                            <span class="fw-bold">@Model.PlannedBreakfast</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0 py-1 border-0">
+                            <span><i class="bi bi-sun me-2 text-warning"></i>Lunch</span>
+                            <span class="fw-bold">@Model.PlannedLunch</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0 py-1 border-0">
+                            <span><i class="bi bi-moon-stars me-2 text-primary"></i>Dinner</span>
+                            <span class="fw-bold">@Model.PlannedDinner</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Actual Meals (Checked In) -->
+        <div class="col-md-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-check-circle-fill fs-3 text-success"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="card-subtitle text-muted small text-uppercase fw-bold">Actual Meals</h6>
+                            <h2 class="card-title fw-bold mb-0">@Model.TotalActual</h2>
+                        </div>
+                    </div>
+                    <ul class="list-group list-group-flush small">
+                        <li class="list-group-item d-flex justify-content-between px-0 py-1 border-0">
+                            <span><i class="bi bi-cup-hot me-2 text-warning"></i>Breakfast</span>
+                            <span class="fw-bold">@Model.ActualBreakfast</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0 py-1 border-0">
+                            <span><i class="bi bi-sun me-2 text-warning"></i>Lunch</span>
+                            <span class="fw-bold">@Model.ActualLunch</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0 py-1 border-0">
+                            <span><i class="bi bi-moon-stars me-2 text-primary"></i>Dinner</span>
+                            <span class="fw-bold">@Model.ActualDinner</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Cancelled Meals -->
+        <div class="col-md-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-x-circle-fill fs-3 text-danger"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="card-subtitle text-muted small text-uppercase fw-bold">Cancelled Meals</h6>
+                            <h2 class="card-title fw-bold mb-0">@Model.TotalCancelled</h2>
+                        </div>
+                    </div>
+                    <ul class="list-group list-group-flush small">
+                        <li class="list-group-item d-flex justify-content-between px-0 py-1 border-0">
+                            <span><i class="bi bi-cup-hot me-2 text-warning"></i>Breakfast</span>
+                            <span class="fw-bold">@Model.CancelledBreakfast</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0 py-1 border-0">
+                            <span><i class="bi bi-sun me-2 text-warning"></i>Lunch</span>
+                            <span class="fw-bold">@Model.CancelledLunch</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0 py-1 border-0">
+                            <span><i class="bi bi-moon-stars me-2 text-primary"></i>Dinner</span>
+                            <span class="fw-bold">@Model.CancelledDinner</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. On Request Meals -->
+        <div class="col-md-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="bi bi-bell-fill fs-3 text-info"></i>
+                        </div>
+                        <div class="ms-3">
+                            <h6 class="card-subtitle text-muted small text-uppercase fw-bold">On Request</h6>
+                            <h2 class="card-title fw-bold mb-0">@Model.TotalOnRequest</h2>
+                        </div>
+                    </div>
+                    <ul class="list-group list-group-flush small">
+                        <li class="list-group-item d-flex justify-content-between px-0 py-1 border-0">
+                            <span><i class="bi bi-cup-hot me-2 text-warning"></i>Breakfast</span>
+                            <span class="fw-bold">@Model.OnRequestBreakfast</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0 py-1 border-0">
+                            <span><i class="bi bi-sun me-2 text-warning"></i>Lunch</span>
+                            <span class="fw-bold">@Model.OnRequestLunch</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between px-0 py-1 border-0">
+                            <span><i class="bi bi-moon-stars me-2 text-primary"></i>Dinner</span>
+                            <span class="fw-bold">@Model.OnRequestDinner</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,585 @@
+@model IEnumerable<HotelRoomBookingAPI.Models.Web.Booking>
+
+@{
+    ViewData["Title"] = ViewBag.PageTitle ?? "Bookings";
+    var filter = ViewBag.Filter as string;
+}
+
+<style>
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+
+    .breadcrumb {
+        background: none;
+        padding: 0;
+        margin-bottom: 1rem;
+    }
+
+    .booking-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: all 0.3s;
+    }
+
+    .booking-card:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        transform: translateY(-2px);
+    }
+
+    .booking-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #ecf0f1;
+    }
+
+    .booking-id {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #2c3e50;
+    }
+
+    .booking-id i {
+        color: #667eea;
+        margin-right: 0.5rem;
+    }
+
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .status-booked {
+        background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+        color: #065f46;
+    }
+
+    .status-cancelled {
+        background: linear-gradient(135deg, #fee2e2, #fecaca);
+        color: #991b1b;
+    }
+
+    .booking-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .detail-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .detail-item i {
+        color: #667eea;
+        font-size: 1.3rem;
+        margin-top: 0.2rem;
+    }
+
+    .detail-content {
+        flex: 1;
+    }
+
+    .detail-label {
+        font-size: 0.85rem;
+        color: #7f8c8d;
+        margin-bottom: 0.25rem;
+        font-weight: 500;
+    }
+
+    .detail-value {
+        font-weight: 700;
+        color: #2c3e50;
+        font-size: 1rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .empty-state i {
+        font-size: 5rem;
+        color: #cbd5e0;
+        margin-bottom: 1.5rem;
+    }
+
+    .empty-state h3 {
+        color: #4a5568;
+        margin-bottom: 0.75rem;
+        font-size: 1.5rem;
+    }
+
+    .empty-state p {
+        color: #a0aec0;
+        font-size: 1rem;
+    }
+
+    .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+        margin-bottom: 1.5rem;
+    }
+
+    .back-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    .view-occupants-btn {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border: none;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-weight: 600;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+    .view-occupants-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+    }
+
+    .occupant-card {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        border-left: 4px solid #667eea;
+    }
+
+    .occupant-name {
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+
+    .occupant-detail {
+        font-size: 0.9rem;
+        color: #7f8c8d;
+        margin-bottom: 0.25rem;
+    }
+
+    .status-badge-small {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        margin-left: 0.5rem;
+    }
+
+    .status-checked-in {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-checked-out {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    .badge-meal {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        margin-right: 2px;
+        color: white;
+    }
+
+    .badge-breakfast {
+        background-color: #ffc107;
+        color: #000;
+    }
+
+    .badge-lunch {
+        background-color: #198754;
+    }
+
+    .badge-dinner {
+        background-color: #212529;
+    }
+</style>
+
+<div class="container mt-4">
+    <a href="@Url.Action("Index", "Dashboard")" class="back-button">
+        <i class="bi bi-arrow-left"></i>
+        Back to Dashboard
+    </a>
+
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+        <h1><i class="bi bi-list-ul"></i> @ViewBag.PageTitle</h1>
+        <div class="d-flex align-items-center gap-3">
+            <input type="text" id="searchInput" class="form-control" placeholder="Search by Occupant Name, Building name, Room no..." onkeyup="applyFilters()" style="min-width: 440px; border-radius: 8px;">
+            
+            <form method="get" action="@Url.Action("Index")" class="d-flex align-items-center gap-2">
+                @if (!string.IsNullOrEmpty(ViewBag.Filter))
+                {
+                    <input type="hidden" name="filter" value="@ViewBag.Filter" />
+                }
+                <div class="date-filter-group d-inline-flex align-items-center" style="white-space: nowrap;">
+                     <label for="dateFilter" class="me-2 fw-bold text-muted">Filter by Date:</label>
+                     <input type="date" 
+                            id="dateFilter" 
+                            name="date"
+                            class="form-control" 
+                            value="@(((DateTime)ViewBag.SelectedDate).ToString("yyyy-MM-dd"))"
+                            onchange="this.form.submit()"
+                            style="border-radius: 8px;">
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        foreach (var booking in Model)
+        {
+            <div class="booking-card" data-search-text="@(booking.Room?.Building?.Building_Name + " " + booking.Room?.RoomNumber + " " + (booking.Occupants != null ? string.Join(" ", booking.Occupants.Select(o => o.FullName)) : ""))">
+                <div class="booking-header">
+                    <div class="booking-id">
+                        <i class="bi bi-bookmark-fill"></i> Booking #@booking.BookingId
+                        <span style="color: #667eea; margin-left: 10px;">• @(booking.Room?.Building?.Building_Name ?? "N/A")</span>
+                    </div>
+                    @{
+                        var checkedInCount = booking.Occupants?.Count(o => o.IsCheckedIn) ?? 0;
+                        var checkedOutCount = booking.Occupants?.Count(o => o.IsCheckedOut) ?? 0;
+                        var totalOccupants = booking.Occupants?.Count ?? 0;
+                        var anyCheckedIn = checkedInCount > 0;
+                        var allCheckedOut = totalOccupants > 0 && checkedOutCount == totalOccupants;
+                    }
+
+                    <div class="d-flex align-items-center gap-3">
+                        <!-- Occupant Info -->
+                        <div class="text-end me-2">
+                             @if(totalOccupants > 0 && (anyCheckedIn || allCheckedOut))
+                             {
+                                  if(allCheckedOut)
+                                  {
+                                       <span class="fw-bold text-danger">@checkedOutCount/@totalOccupants</span>
+                                  }
+                                  else
+                                  {
+                                       <span class="fw-bold text-success">@checkedInCount/@totalOccupants</span>
+                                  }
+                             }
+                             else
+                             {
+                                  <span class="fw-bold text-secondary">@(totalOccupants)</span>
+                             }
+                        </div>
+
+                    @if (booking.BookingStatus == "Booked")
+                    {
+                        if (anyCheckedIn && !allCheckedOut)
+                        {
+                            <span class="status-badge status-checked-in">Checked In</span>
+                        }
+                        else if (allCheckedOut)
+                        {
+                            <span class="status-badge" style="background: #e2e8f0; color: #4a5568;">Checked Out</span>
+                        }
+                        else
+                        {
+                             <span class="status-badge status-booked">Booked</span>
+                        }
+                    }
+                    else if (booking.BookingStatus == "CheckedIn")
+                    {
+                         <span class="status-badge status-checked-in">Checked In</span>
+                    }
+                    else if (booking.BookingStatus == "Cancelled")
+                    {
+                        <span class="status-badge status-cancelled">Cancelled</span>
+                    }
+                    else
+                    {
+                        <span class="status-badge status-booked">@booking.BookingStatus</span>
+                    }
+                    </div>
+                </div>
+                <div class="booking-details">
+                    <div class="detail-item">
+                        <i class="bi bi-door-closed-fill"></i>
+                        <div class="detail-content">
+                            <div class="detail-label">Room Number</div>
+                            <div class="detail-value">@(booking.Room?.RoomNumber ?? "N/A")</div>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <i class="bi bi-tag-fill"></i>
+                        <div class="detail-content">
+                            <div class="detail-label">Room Type</div>
+                            <div class="detail-value">@(booking.Room?.RoomType?.RoomTypeName ?? "N/A")</div>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <i class="bi bi-calendar-event-fill"></i>
+                        <div class="detail-content">
+                            <div class="detail-label">Check-in Date</div>
+                            <div class="detail-value">
+                                <div>@booking.CheckInDate.ToString("MMM dd, yyyy")</div>
+                                <div class="text-muted small">@(booking.BookingStartDateTime?.ToString("hh:mm tt") ?? booking.CheckInDate.ToString("hh:mm tt"))</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <i class="bi bi-calendar-x-fill"></i>
+                        <div class="detail-content">
+                            <div class="detail-label">Check-out Date</div>
+                            <div class="detail-value">
+                                <div>@booking.CheckOutDate.ToString("MMM dd, yyyy")</div>
+                                <div class="text-muted small">@(booking.BookingEndDateTime?.ToString("hh:mm tt") ?? booking.CheckOutDate.ToString("hh:mm tt"))</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <i class="bi bi-people-fill"></i>
+                        <div class="detail-content">
+                            <div class="detail-label">Occupants</div>
+                            <div class="detail-value">
+                                <button class="btn btn-sm btn-outline-primary view-occupants-btn" onclick="viewOccupants(@booking.BookingId)">
+                                    <i class="bi bi-eye"></i> View Details
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="empty-state">
+            <i class="bi bi-inbox"></i>
+            <h3>No Bookings Found</h3>
+            <p>There are no bookings matching this filter at the moment.</p>
+        </div>
+    }
+</div>
+
+<!-- Occupants Modal -->
+<div class="modal fade" id="occupantsModal" tabindex="-1" aria-labelledby="occupantsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="occupantsModalLabel">
+                    <i class="bi bi-people-fill"></i> Occupants Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="occupantsModalBody">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Store occupants data in JavaScript object
+    const bookingsData = {
+        @foreach (var booking in Model ?? Enumerable.Empty<HotelRoomBookingAPI.Models.Web.Booking>())
+        {
+            <text>
+            @booking.BookingId: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(booking.Occupants ?? new List<HotelRoomBookingAPI.Models.Web.DTOs.BookingOccupantDto>(), new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase })),
+            </text>
+        }
+    };
+
+    function applyFilters() {
+        const searchInput = document.getElementById('searchInput');
+        const searchValue = searchInput ? searchInput.value.toLowerCase() : '';
+        const cards = document.querySelectorAll('.booking-card');
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const searchText = card.getAttribute('data-search-text') ? card.getAttribute('data-search-text').toLowerCase() : '';
+            
+            if (!searchValue || searchText.includes(searchValue)) {
+                card.style.display = 'block';
+                // Trigger animation for new matches
+                 if(card.style.display === 'none') {
+                    card.style.animation = 'none';
+                    card.offsetHeight; /* trigger reflow */
+                    card.style.animation = 'fadeIn 0.5s ease-out';
+                 }
+                 visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Handle Empty State visibility
+        const emptyState = document.querySelector('.empty-state');
+        if (visibleCount === 0 && searchValue !== '' && cards.length > 0) {
+            if (!emptyState) {
+                // If no empty state exists (meaning there were bookings initially), create a temporary one for search
+                // Check if we already created one
+                if(!document.getElementById('search-no-results')) {
+                    const noResults = document.createElement('div');
+                    noResults.id = 'search-no-results';
+                    noResults.className = 'empty-state';
+                    noResults.innerHTML = `
+                        <i class="bi bi-search"></i>
+                        <h3>No Results Found</h3>
+                        <p>No bookings match your search query "${searchValue}".</p>
+                    `;
+                    document.querySelector('.container.mt-4').appendChild(noResults);
+                } else {
+                     document.getElementById('search-no-results').style.display = 'block';
+                     document.getElementById('search-no-results').querySelector('p').textContent = `No bookings match your search query "${searchValue}".`;
+                }
+            } else {
+                emptyState.style.display = 'block';
+            }
+        } else {
+            if(document.getElementById('search-no-results')) {
+                document.getElementById('search-no-results').style.display = 'none';
+            }
+            if(emptyState && cards.length === 0) {
+                 // If the list was originally empty (no model data), keep empty state shown
+                 emptyState.style.display = 'block';
+            } else if (emptyState) {
+                // If we have cards but filtered, hide original empty state (it shouldn't be there effectively if cards exist, but just in case)
+                 emptyState.style.display = 'none';
+            }
+        }
+    }
+
+    function viewOccupants(bookingId) {
+        console.log('viewOccupants called with bookingId:', bookingId);
+        
+        // Show modal
+        const modalElement = document.getElementById('occupantsModal');
+        if (!modalElement) {
+            console.error('Modal element not found');
+            return;
+        }
+
+        // Use existing instance or create new one
+        let modal = bootstrap.Modal.getInstance(modalElement);
+        if (!modal) {
+            modal = new bootstrap.Modal(modalElement);
+        }
+        modal.show();
+        
+        const modalBody = document.getElementById('occupantsModalBody');
+        const occupants = bookingsData[bookingId];
+        
+        if (occupants && occupants.length > 0) {
+            let html = `
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Name</th>
+                                <th>Phone</th>
+                                <th>Aadhaar</th>
+                                <th>Meals</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            occupants.forEach(occupant => {
+                const checkedInBadge = occupant.isCheckedIn ? '<span class="badge bg-success ms-1">In</span>' : '';
+                const checkedOutBadge = occupant.isCheckedOut ? '<span class="badge bg-danger ms-1">Out</span>' : '';
+                
+                // Format meals with colorful badges
+                let mealsHtml = '';
+                if (occupant.hasBreakfast) {
+                    mealsHtml += '<span class="badge-meal badge-breakfast" title="Breakfast"><i class="bi bi-cup-hot-fill"></i> B</span>';
+                }
+                if (occupant.hasLunch) {
+                    mealsHtml += '<span class="badge-meal badge-lunch" title="Lunch"><i class="bi bi-sun-fill"></i> L</span>';
+                }
+                if (occupant.hasDinner) {
+                    mealsHtml += '<span class="badge-meal badge-dinner" title="Dinner"><i class="bi bi-moon-stars-fill"></i> D</span>';
+                }
+                
+                if (!mealsHtml) {
+                    mealsHtml = '<span class="text-muted">-</span>';
+                }
+
+                html += `
+                    <tr>
+                        <td class="fw-bold">${occupant.fullName || 'N/A'}</td>
+                        <td>${occupant.phoneNumber || 'N/A'}</td>
+                        <td>${occupant.aadhaarLast4 ? 'xxxx-' + occupant.aadhaarLast4 : 'N/A'}</td>
+                        <td>${mealsHtml}</td>
+                        <td>
+                            ${checkedInBadge}
+                            ${checkedOutBadge}
+                            ${!occupant.isCheckedIn && !occupant.isCheckedOut ? '<span class="badge bg-secondary">Pending</span>' : ''}
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            modalBody.innerHTML = html;
+        } else {
+            modalBody.innerHTML = '<p class="text-center text-muted">No occupants found for this booking.</p>';
+        }
+    }
+
+    // Date filter is now handled by the form submission
+    document.addEventListener('DOMContentLoaded', function() {
+        // Optional: Focus search if needed
+        const searchInput = document.getElementById('searchInput');
+        if(searchInput && searchInput.value) {
+            applyFilters();
+        }
+    });
+</script>
+}
+
+

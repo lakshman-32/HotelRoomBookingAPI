@@ -1,0 +1,268 @@
+﻿
+<!-- this page is removed because it is not used in this project -->
+<!-- project head only said to remove this page -->
+
+@{
+    ViewData["Title"] = "Welcome";
+}
+
+<style>
+    .home-hero {
+        min-height: 70vh;
+        background: #9C6EA9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        margin: -20px -15px 40px;
+    }
+    
+    .home-hero::before {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.1) 0%, transparent 50%);
+        animation: float 6s ease-in-out infinite;
+    }
+    
+    @@keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+    }
+    
+    .hero-content {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        color: white;
+        animation: fadeInUp 1s ease-out;
+    }
+    
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .hero-title {
+        font-size: 4rem;
+        font-weight: 800;
+        text-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        margin-bottom: 20px;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.5rem;
+        font-weight: 300;
+        margin-bottom: 40px;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .btn-hero {
+        background: white;
+        color: #9C6EA9;
+        border: none;
+        border-radius: 50px;
+        padding: 16px 48px;
+        font-size: 18px;
+        font-weight: 700;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .btn-hero:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 35px rgba(0,0,0,0.3);
+        color: #b589c2;
+    }
+    
+    .feature-card {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 40px 30px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255,255,255,0.3);
+        height: 100%;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+    
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #9C6EA9 0%, #b589c2 100%);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 25px;
+        font-size: 40px;
+        color: white;
+        box-shadow: 0 8px 20px rgba(156, 110, 169, 0.3);
+    }
+    
+    .feature-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 15px;
+    }
+    
+    .feature-text {
+        color: #718096;
+        font-size: 16px;
+        line-height: 1.6;
+    }
+    
+    .section-title {
+        font-size: 3rem;
+        font-weight: 800;
+        color: #2d3748;
+        text-align: center;
+        margin-bottom: 50px;
+        position: relative;
+    }
+    
+    .section-title::after {
+        content: '';
+        display: block;
+        width: 100px;
+        height: 4px;
+        background: linear-gradient(135deg, #9C6EA9 0%, #b589c2 100%);
+        margin: 20px auto 0;
+        border-radius: 2px;
+    }
+    
+    .services-section {
+        padding: 80px 0;
+        background: linear-gradient(180deg, #f7fafc 0%, #ffffff 100%);
+    }
+    
+    .service-box {
+        background: white;
+        border-radius: 20px;
+        padding: 50px 40px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        height: 100%;
+        border: 2px solid transparent;
+    }
+    
+    .service-box:hover {
+        border-color: #9C6EA9;
+        transform: translateY(-5px);
+        box-shadow: 0 15px 50px rgba(156, 110, 169, 0.2);
+    }
+    
+    .service-box h2 {
+        color: #2d3748;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+    
+    .service-box p {
+        color: #718096;
+        line-height: 1.8;
+        margin-bottom: 25px;
+    }
+    
+    .btn-service {
+        background: linear-gradient(135deg, #9C6EA9 0%, #b589c2 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 30px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-service:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(156, 110, 169, 0.4);
+        color: white;
+    }
+    
+    @@media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.5rem;
+        }
+        .hero-subtitle {
+            font-size: 1.2rem;
+        }
+        .section-title {
+            font-size: 2rem;
+        }
+    }
+</style>
+
+<div class="home-hero">
+    <div class="hero-content container">
+        <h1 class="hero-title">Welcome to Siechem Hotels</h1>
+        <p class="hero-subtitle">Experience luxury and comfort in every stay</p>
+        <a class="btn btn-hero" asp-controller="Rooms" asp-action="Index">Book Your Stay</a>
+    </div>
+</div>
+
+<div class="services-section">
+    <div class="container">
+        <div class="row g-4 mb-5">
+            <div class="col-md-6">
+                <div class="service-box">
+                    <h2>Premium Rooms</h2>
+                    <p>Choose from our wide range of rooms including Standard, Deluxe, and Suites. All equipped with modern facilities and stunning views.</p>
+                    <a class="btn btn-service" asp-controller="Rooms" asp-action="Index">View Rooms</a>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="service-box">
+                    <h2>Exclusive Services</h2>
+                    <p>Enjoy our spa, swimming pool, and fine dining restaurants. We ensure your stay is memorable with world-class amenities.</p>
+                    <button class="btn btn-service" type="button">Explore Services</button>
+                </div>
+            </div>
+        </div>
+        
+        <h3 class="section-title">Why Choose Us?</h3>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-geo-alt-fill"></i>
+                    </div>
+                    <h5 class="feature-title">Best Locations</h5>
+                    <p class="feature-text">Located in the heart of the city with easy access to major attractions and business districts.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-wifi"></i>
+                    </div>
+                    <h5 class="feature-title">Free Wi-Fi</h5>
+                    <p class="feature-text">Stay connected with high-speed internet throughout your stay, available in all rooms and common areas.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="bi bi-headset"></i>
+                    </div>
+                    <h5 class="feature-title">24/7 Support</h5>
+                    <p class="feature-text">Our dedicated team is here to help you anytime, ensuring a seamless and comfortable experience.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,238 @@
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #4e54c8 0%, #8f94fb 100%);
+        padding: 30px 0;
+        margin: -20px -15px 50px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .dashboard-header::before {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: rotate 10s linear infinite;
+    }
+    
+    @@keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    .dashboard-header h1 {
+        color: white;
+        font-size: 2rem;
+        font-weight: 800;
+        text-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        margin: 0;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .stat-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 40px 30px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        transition: all 0.4s ease;
+        border: 2px solid transparent;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+        animation: fadeInUp 0.6s ease-out;
+        animation-fill-mode: both;
+    }
+    
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .stat-card:nth-child(1) { animation-delay: 0.1s; }
+    .stat-card:nth-child(2) { animation-delay: 0.2s; }
+    .stat-card:nth-child(3) { animation-delay: 0.3s; }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: linear-gradient(90deg, #4e54c8 0%, #8f94fb 100%);
+        transform: scaleX(0);
+        transition: transform 0.4s ease;
+    }
+    
+    .stat-card:hover::before {
+        transform: scaleX(1);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 60px rgba(78, 84, 200, 0.2);
+        border-color: #4e54c8;
+    }
+    
+    .stat-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #4e54c8 0%, #8f94fb 100%);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 25px;
+        font-size: 40px;
+        color: white;
+        box-shadow: 0 8px 20px rgba(78, 84, 200, 0.3);
+    }
+    
+    .stat-card.buildings .stat-icon {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+    
+    .stat-card.bookings .stat-icon {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        box-shadow: 0 8px 20px rgba(17, 153, 142, 0.3);
+    }
+    
+    .stat-card.users .stat-icon {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        box-shadow: 0 8px 20px rgba(79, 172, 254, 0.3);
+    }
+    
+    .stat-title {
+        font-size: 14px;
+        text-transform: uppercase;
+        color: #a0aec0;
+        font-weight: 700;
+        margin-bottom: 10px;
+        letter-spacing: 1px;
+    }
+    
+    .stat-heading {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #2d3748;
+        margin-bottom: 15px;
+    }
+    
+    .stat-description {
+        color: #718096;
+        font-size: 15px;
+        line-height: 1.6;
+        margin-bottom: 25px;
+    }
+    
+    .btn-stat {
+        background: linear-gradient(135deg, #4e54c8 0%, #8f94fb 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 30px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(78, 84, 200, 0.3);
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-stat:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(78, 84, 200, 0.5);
+        color: white;
+    }
+    
+    .stat-card.buildings .btn-stat {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .stat-card.buildings .btn-stat:hover {
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    }
+    
+    .stat-card.bookings .btn-stat {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+    }
+    
+    .stat-card.bookings .btn-stat:hover {
+        box-shadow: 0 6px 20px rgba(17, 153, 142, 0.5);
+    }
+    
+    .stat-card.users .btn-stat {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+    }
+    
+    .stat-card.users .btn-stat:hover {
+        box-shadow: 0 6px 20px rgba(79, 172, 254, 0.5);
+    }
+    
+    @@media (max-width: 768px) {
+        .dashboard-header h1 {
+            font-size: 2.5rem;
+        }
+    }
+</style>
+
+<div class="dashboard-header">
+    <div class="container">
+        <h1>Admin Dashboard</h1>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="stat-card buildings">
+                <div class="stat-icon">
+                    <i class="bi bi-building"></i>
+                </div>
+                <div class="stat-title">Manage Buildings</div>
+                <h5 class="stat-heading">Buildings Master</h5>
+                <p class="stat-description">View, add, edit, or delete buildings in the system.</p>
+                <a asp-action="BuildingMaster" class="btn-stat">Go to Buildings</a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card bookings">
+                <div class="stat-icon">
+                    <i class="bi bi-calendar-check"></i>
+                </div>
+                <div class="stat-title">MANAGE BOOKINGS</div>
+                <h5 class="stat-heading">All Bookings</h5>
+                <p class="stat-description">Monitor and manage all user bookings across the system.</p>
+                <a asp-action="AllBookings" class="btn-stat">View Bookings</a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card users">
+                <div class="stat-icon">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <div class="stat-title">MANAGE USERS</div>
+                <h5 class="stat-heading">Registered Users</h5>
+                <p class="stat-description">View and manage all registered users in the system.</p>
+                <a asp-action="AllUsers" class="btn-stat">View Users</a>
+            </div>
+        </div>
+    </div>
+</div>

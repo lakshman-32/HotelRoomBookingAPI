@@ -1,0 +1,330 @@
+@model HotelRoomBookingAPI.Models.Web.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Overview";
+}
+
+<style>
+    /* Stats Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--card-gradient);
+    }
+
+    .stat-card.available {
+        --card-gradient: linear-gradient(90deg, #4ade80, #22c55e);
+    }
+
+    .stat-card.checkin {
+        --card-gradient: linear-gradient(90deg, #60a5fa, #3b82f6);
+    }
+
+    .stat-card.checkout {
+        --card-gradient: linear-gradient(90deg, #f59e0b, #d97706);
+    }
+
+    .stat-card.pending {
+        --card-gradient: linear-gradient(90deg, #a78bfa, #8b5cf6);
+    }
+
+    .stat-card.cancelled {
+        --card-gradient: linear-gradient(90deg, #f87171, #ef4444);
+    }
+    
+    .stat-card.meals {
+        --card-gradient: linear-gradient(90deg, #ec4899, #d946ef);
+    }
+    
+    .stat-card.total {
+        --card-gradient: linear-gradient(90deg, #64748b, #475569);
+    }
+
+    .stat-card.booked {
+        --card-gradient: linear-gradient(90deg, #0ea5e9, #0284c7);
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        margin-bottom: 0.75rem;
+        background: var(--card-gradient);
+        color: white;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: #7f8c8d;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.4rem;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #2c3e50;
+        line-height: 1;
+    }
+
+    .stat-link {
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #ecf0f1;
+    }
+
+    .stat-link a {
+        color: #7f8c8d;
+        text-decoration: none;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: color 0.2s;
+    }
+
+    .stat-link a:hover {
+        color: #3498db;
+    }
+
+    .stat-link i {
+        margin-left: 0.25rem;
+        font-size: 0.7rem;
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1>Overview</h1>
+        <p class="mb-0">Welcome back! Here's your booking overview</p>
+    </div>
+    <form method="get" class="d-flex align-items-center bg-white p-2 rounded shadow-sm">
+         <label class="me-2 fw-bold text-nowrap">Filter By Date:</label>
+         <input type="date" name="date" class="form-control form-control-sm" value="@(ViewBag.SelectedDate != null ? ((DateTime)ViewBag.SelectedDate).ToString("yyyy-MM-dd") : "")" onchange="this.form.submit()" />
+         @if(ViewContext.HttpContext.Request.Query.ContainsKey("date")) {
+             <a asp-action="Index" class="btn btn-sm btn-light ms-2 text-danger" title="Clear Filter"><i class="bi bi-x-lg"></i></a>
+         }
+    </form>
+</div>
+
+
+
+<div class="stats-grid">
+    <!-- Total Rooms -->
+    <div class="stat-card total">
+        <div class="stat-icon">
+            <i class="bi bi-building"></i>
+        </div>
+        <div class="stat-label">Total Rooms</div>
+        <div class="stat-value">@Model.TotalRooms</div>
+        <div class="stat-link">
+            <span class="text-muted small">Total Capacity</span>
+        </div>
+    </div>
+
+    <!-- Available Rooms -->
+    <div class="stat-card available">
+        <div class="stat-icon">
+            <i class="bi bi-door-open-fill"></i>
+        </div>
+        <div class="stat-label">Available Rooms</div>
+        <div class="stat-value">@Model.AvailableRooms</div>
+        <div class="stat-link">
+            <a asp-controller="Rooms" asp-action="Available" asp-route-checkInDate="@(ViewBag.SelectedDate != null ? ((DateTime)ViewBag.SelectedDate).ToString("yyyy-MM-dd") : "")">
+                View Details <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Booked Rooms -->
+    <div class="stat-card booked">
+        <div class="stat-icon">
+            <i class="bi bi-door-closed-fill"></i>
+        </div>
+        <div class="stat-label">Booked Rooms</div>
+        <div class="stat-value">@Model.BookedRoomsCount</div>
+        <div class="stat-link">
+            <a asp-controller="BookingsList" asp-action="Index" asp-route-filter="booked" asp-route-date="@(ViewBag.SelectedDate != null ? ((DateTime)ViewBag.SelectedDate).ToString("yyyy-MM-dd") : "")">
+                View Details <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Today Check-ins -->
+    <div class="stat-card checkin">
+        <div class="stat-icon">
+            <i class="bi bi-box-arrow-in-right"></i>
+        </div>
+        <div class="stat-label">@(ViewBag.SelectedDate != null && ((DateTime)ViewBag.SelectedDate).Date != DateTime.Today ? "Check-ins" : "Today Check-ins")</div>
+        <div class="stat-value">
+            @{
+                var actualCheckIns = Model.TodayCheckIns - Model.PendingBookings;
+            }
+            <span class="text-primary">@actualCheckIns</span> / <span class="text-muted fs-4">@Model.TodayCheckIns</span>
+        </div>
+        <div class="stat-link">
+            <a asp-controller="BookingsList" asp-action="Index" asp-route-filter="todayCheckins" asp-route-date="@(ViewBag.SelectedDate != null ? ((DateTime)ViewBag.SelectedDate).ToString("yyyy-MM-dd") : "")">
+                View Details <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Today Check-outs -->
+    <div class="stat-card checkout">
+        <div class="stat-icon">
+            <i class="bi bi-box-arrow-right"></i>
+        </div>
+        <div class="stat-label">@(ViewBag.SelectedDate != null && ((DateTime)ViewBag.SelectedDate).Date != DateTime.Today ? "Check-outs" : "Today Check-outs")</div>
+        <div class="stat-value">@Model.TodayCheckOuts</div>
+        <div class="stat-link">
+            <a asp-controller="BookingsList" asp-action="Index" asp-route-filter="todayCheckouts" asp-route-date="@(ViewBag.SelectedDate != null ? ((DateTime)ViewBag.SelectedDate).ToString("yyyy-MM-dd") : "")">
+                View Details <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Pending Bookings -->
+    <div class="stat-card pending">
+        <div class="stat-icon">
+            <i class="bi bi-hourglass-split"></i>
+        </div>
+        <div class="stat-label">Pending</div>
+        <div class="stat-value">@Model.PendingBookings</div>
+        <div class="stat-link">
+            <a asp-controller="BookingsList" asp-action="Index" asp-route-filter="pending">
+                View Details <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Cancelled Bookings -->
+    <div class="stat-card cancelled">
+        <div class="stat-icon">
+            <i class="bi bi-x-circle-fill"></i>
+        </div>
+        <div class="stat-label">Cancelled</div>
+        <div class="stat-value">@Model.CancelledBookings</div>
+        <div class="stat-link">
+            <a asp-controller="BookingsList" asp-action="Index" asp-route-filter="cancelled">
+                View Details <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Occupants Card -->
+    <div class="stat-card" style="--card-gradient: linear-gradient(90deg, #8b5cf6, #7c3aed);">
+        <div class="stat-icon">
+            <i class="bi bi-people-fill"></i>
+        </div>
+        <div class="stat-label">Total Occupants</div>
+        <div class="stat-value">
+            <span class="text-success fs-3">@Model.OccupantsCheckedIn</span> / <span class="fs-4 text-muted">@Model.TotalOccupants</span>
+        </div>
+        <div class="stat-link">
+            <span class="text-muted small">Checked In / Total</span>
+        </div>
+    </div>
+
+    <!-- Meals to be Prepared -->
+    <div class="stat-card meals">
+        <div class="stat-icon">
+            <i class="bi bi-egg-fried"></i>
+        </div>
+        <div class="stat-label">Meals to be Prepared</div>
+        <div class="stat-value">@Model.TotalMeals</div>
+        <div class="stat-link">
+            <a href="#" data-bs-toggle="modal" data-bs-target="#mealsModal">
+                View Details <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Meals Modal -->
+<div class="modal fade" id="mealsModal" tabindex="-1" aria-labelledby="mealsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="mealsModalLabel">Today's Meal Preparation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="d-flex align-items-center mb-4 p-3 bg-light rounded-3">
+                    <div class="me-3 p-2 bg-white rounded-circle shadow-sm">
+                        <i class="bi bi-egg-fried fs-3 text-warning"></i>
+                    </div>
+                    <div>
+                        <h2 class="mb-0 fw-bold text-dark">@Model.TotalMeals</h2>
+                        <div class="text-muted small">Total meals to prepare today</div>
+                    </div>
+                </div>
+                
+                <div class="card border-0 shadow-sm">
+                    <div class="list-group list-group-flush rounded-3">
+                        <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-cup-hot text-warning me-3 fs-5"></i>
+                                <span class="fw-semibold text-secondary">Breakfast</span>
+                            </div>
+                            <span class="badge bg-warning text-dark rounded-pill">@Model.BreakfastCount</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-brightness-high text-warning me-3 fs-5"></i>
+                                <span class="fw-semibold text-secondary">Lunch</span>
+                            </div>
+                            <span class="badge bg-warning text-dark rounded-pill">@Model.LunchCount</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-moon-stars text-primary me-3 fs-5"></i>
+                                <span class="fw-semibold text-secondary">Dinner</span>
+                            </div>
+                            <span class="badge bg-primary rounded-pill">@Model.DinnerCount</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+

@@ -1,0 +1,124 @@
+@model List<HotelRoomBookingAPI.Models.Web.ViewModels.Reports.AvailabilityDetailVM>
+
+@{
+    var status = ViewData["Status"] as string;
+    var showAll = string.IsNullOrEmpty(status);
+    
+    // Group by building
+    var buildingGroups = Model?.GroupBy(x => x.BuildingName).OrderBy(x => x.Key).ToList();
+}
+
+@if (buildingGroups != null && buildingGroups.Any())
+{
+    var totalRooms = Model.Count;
+    var totalBooked = Model.Count(x => x.Status == "Booked");
+    var totalAvailable = Model.Count(x => x.Status == "Available");
+
+    <div class="px-3 pt-3">
+        <!-- Grand Total Summary -->
+        <div class="alert alert-light border d-flex justify-content-center gap-4 align-items-center mb-3 shadow-sm">
+            <span class="fw-bold text-dark">Selected Total:</span>
+            <span class="badge bg-secondary rounded-pill fs-6 px-3">@totalRooms</span>
+            
+            @if (showAll || status == "Booked")
+            {
+                <div class="vr"></div>
+                <div class="d-flex align-items-center">
+                    <span class="fw-bold text-secondary me-2">Booked:</span> 
+                    <span class="badge bg-danger rounded-pill fs-6 px-3">@totalBooked</span>
+                </div>
+            }
+            
+            @if (showAll || status == "Available")
+            {
+                <div class="vr"></div>
+                <div class="d-flex align-items-center">
+                    <span class="fw-bold text-secondary me-2">Available:</span> 
+                    <span class="badge bg-success rounded-pill fs-6 px-3">@totalAvailable</span>
+                </div>
+            }
+        </div>
+
+        <!-- Buildings Table -->
+        <div class="table-responsive">
+            <table class="table table-hover align-middle border mb-0 rounded-3 overflow-hidden">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Building Name</th>
+                        <th class="text-center">Count</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{ int groupIndex = 0; }
+                    @foreach (var group in buildingGroups)
+                    {
+                        var groupCount = group.Count();
+                        var collapseId = "collapse-bldg-" + groupIndex;
+
+                        <tr class="fw-bold bg-light border-bottom">
+                            <td class="ps-4">@group.Key</td>
+                            <td class="text-center"><span class="badge bg-secondary rounded-pill px-3">@groupCount</span></td>
+                            <td class="text-end pe-4">
+                                <button class="btn btn-sm btn-primary rounded-pill px-3" type="button" data-bs-toggle="collapse" data-bs-target="#@collapseId" aria-expanded="false" aria-controls="@collapseId">
+                                    <i class="bi bi-eye me-1"></i> View
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="p-0 border-0">
+                                <div class="collapse" id="@collapseId">
+                                    <div class="card card-body border-0 bg-white rounded-0 p-3 shadow-inner">
+                                        <h6 class="text-muted border-bottom pb-2 mb-3">Rooms in @group.Key</h6>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-bordered align-middle mb-0">
+                                                <thead class="bg-light text-secondary small">
+                                                    <tr>
+                                                        <th class="text-center" style="width: 50px;">S.No</th>
+                                                        <th>Room No</th>
+                                                        <th>Room Type</th>
+                                                        <th>Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @{ int sno = 1; }
+                                                    @foreach (var item in group)
+                                                    {
+                                                        <tr>
+                                                            <td class="text-center small text-muted">@sno</td>
+                                                            <td class="fw-semibold">@item.RoomNumber</td>
+                                                            <td><span class="badge bg-light text-dark border">@item.RoomTypeName</span></td>
+                                                            <td>
+                                                                @if (item.Status == "Booked")
+                                                                {
+                                                                    <span class="badge bg-danger">Booked</span>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <span class="badge bg-success">Available</span>
+                                                                }
+                                                            </td>
+                                                        </tr>
+                                                        sno++;
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        groupIndex++;
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+else
+{
+    <div class="text-center p-5 text-muted">
+        <i class="bi bi-house-slash fs-1 opacity-50"></i>
+        <p class="mt-3 fs-5">No rooms found for this selection.</p>
+    </div>
+}

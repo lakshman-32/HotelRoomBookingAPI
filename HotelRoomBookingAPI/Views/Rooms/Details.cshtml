@@ -1,0 +1,71 @@
+@model HotelRoomBookingAPI.Models.Web.Room
+
+@{
+    ViewData["Title"] = "Room Details";
+    // Function to get image based on room type
+    string GetRoomImage(string roomType)
+    {
+        var type = roomType?.ToLower() ?? "standard";
+        if (type.Contains("suite") || type.Contains("deluxe")) return "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=800&auto=format&fit=crop";
+        if (type.Contains("single")) return "https://images.unsplash.com/photo-1631049552057-403cdb8f0658?q=80&w=800&auto=format&fit=crop";
+        return "https://images.unsplash.com/photo-1618773928121-c32242e63f39?q=80&w=800&auto=format&fit=crop";
+    }
+}
+
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="row g-0">
+            <div class="col-md-6">
+                <img src="@GetRoomImage(Model.RoomType?.RoomTypeName ?? "")" class="img-fluid rounded-start h-100" style="object-fit: cover; width: 100%;" alt="Room Image">
+            </div>
+            <div class="col-md-6">
+                <div class="card-body">
+                    <h2 class="card-title">@Model.RoomType?.RoomTypeName</h2>
+                    <h4 class="text-muted">Room @Model.RoomNumber</h4>
+                    <hr/>
+                    <dl class="row">
+                        <dt class="col-sm-4">Hotel</dt>
+                        <dd class="col-sm-8">@Model.Building?.Building_Name</dd>
+
+                        <dt class="col-sm-4">Location</dt>
+                        <dd class="col-sm-8">@Model.Building?.Building_Location</dd>
+
+                        <dt class="col-sm-4">Floor</dt>
+                        <dd class="col-sm-8">@Model.Floor?.FloorNumber</dd>
+                        
+                        <dt class="col-sm-4">Capacity</dt>
+                        <dd class="col-sm-8">@Model.RoomType?.Capacity Guests</dd>
+
+                        <dt class="col-sm-4">Status</dt>
+                        <dd class="col-sm-8">
+                             @if(Model.Status == "Available")
+                            {
+                                <span class="badge bg-success">Available</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">@Model.Status</span>
+                            }
+                        </dd>
+                    </dl>
+                    
+                    <div class="mt-4">
+                        @if(Model.Status == "Available")
+                        {
+                            <a asp-action="Available" class="btn btn-primary btn-lg w-100">Find Dates to Book</a>
+                        }
+                        else
+                        {
+                             <button class="btn btn-secondary btn-lg w-100" disabled>Not Available</button>
+                        }
+                    </div>
+                    <div class="mt-2 text-center">
+                         <a asp-action="Index">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+

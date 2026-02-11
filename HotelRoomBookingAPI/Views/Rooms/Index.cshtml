@@ -1,0 +1,205 @@
+@model IEnumerable<HotelRoomBookingAPI.Models.Web.Room>
+
+@{
+    ViewData["Title"] = "Rooms";
+    
+    // Function to get image based on room type
+    string GetRoomImage(string roomType)
+    {
+        var type = roomType?.ToLower() ?? "standard";
+        if (type.Contains("suite") || type.Contains("deluxe")) return "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=600&auto=format&fit=crop";
+        if (type.Contains("single")) return "https://images.unsplash.com/photo-1631049552057-403cdb8f0658?q=80&w=600&auto=format&fit=crop";
+        return "https://images.unsplash.com/photo-1618773928121-c32242e63f39?q=80&w=600&auto=format&fit=crop";
+    }
+}
+
+<style>
+
+    
+
+    
+    .room-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        transition: all 0.4s ease;
+        border: none;
+        height: 100%;
+        animation: fadeInUp 0.6s ease-out;
+        animation-fill-mode: both;
+    }
+    
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .room-card:hover {
+        transform: translateY(-15px);
+        box-shadow: 0 20px 60px rgba(250, 112, 154, 0.3);
+    }
+    
+    .room-card:nth-child(1) { animation-delay: 0.1s; }
+    .room-card:nth-child(2) { animation-delay: 0.2s; }
+    .room-card:nth-child(3) { animation-delay: 0.3s; }
+    .room-card:nth-child(4) { animation-delay: 0.4s; }
+    .room-card:nth-child(5) { animation-delay: 0.5s; }
+    .room-card:nth-child(6) { animation-delay: 0.6s; }
+    
+    .room-image {
+        height: 250px;
+        object-fit: cover;
+        transition: transform 0.4s ease;
+    }
+    
+    .room-card:hover .room-image {
+        transform: scale(1.1);
+    }
+    
+    .room-image-container {
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .room-image-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.3) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .room-card:hover .room-image-overlay {
+        opacity: 1;
+    }
+    
+    .room-number-badge {
+        background: linear-gradient(135deg, #536DFE 0%, #304FFE 100%);
+        color: white;
+        padding: 8px 20px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 14px;
+        box-shadow: 0 4px 15px rgba(83, 109, 254, 0.3);
+    }
+    
+    .room-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 10px;
+    }
+    
+    .room-details {
+        color: #718096;
+        font-size: 15px;
+        line-height: 1.8;
+    }
+    
+    .status-badge {
+        padding: 8px 20px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 14px;
+    }
+    
+    .status-available {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+    }
+    
+    .btn-view-details {
+        background: linear-gradient(135deg, #536DFE 0%, #304FFE 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(83, 109, 254, 0.3);
+    }
+    
+    .btn-view-details:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(83, 109, 254, 0.5);
+        color: white;
+    }
+    
+    .no-rooms-alert {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 60px 40px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        border: 2px solid rgba(250, 112, 154, 0.2);
+    }
+    
+
+</style>
+
+<div class="page-header">
+    <h1>Our Rooms</h1>
+    <p>Experience luxury and comfort</p>
+</div>
+
+<div class="container">
+    @if (!Model.Any())
+    {
+        <div class="no-rooms-alert text-center">
+            <h4 class="mb-3" style="color: #2d3748; font-weight: 700;">No rooms found</h4>
+            <p style="color: #718096;">There are no rooms added to the system yet. Please contact the administrator.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+            @foreach (var room in Model)
+            {
+                <div class="col">
+                    <div class="card room-card">
+                        <div class="room-image-container">
+                            <img src="@GetRoomImage(room.RoomType?.RoomTypeName ?? "")" class="card-img-top room-image" alt="Room Image">
+                            <div class="room-image-overlay"></div>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="room-title mb-0">@room.RoomType?.RoomTypeName</h5>
+                                <span class="room-number-badge">Room @room.RoomNumber</span>
+                            </div>
+                            <p class="room-details">
+                                <i class="bi bi-building"></i> @room.Building?.Building_Name<br/>
+                                <i class="bi bi-people-fill"></i> Capacity: @room.RoomType?.Capacity Guests
+                            </p>
+                            
+                            @if(room.Status == "Available")
+                            {
+                                <span class="status-badge status-available">Available</span>
+                            }
+                            else
+                            {
+                                <span class="status-badge bg-secondary text-white">@room.Status</span>
+                            }
+                        </div>
+                        <div class="card-footer bg-white border-0 p-4 pt-0">
+                            <div class="d-grid">
+                                <a asp-action="Details" asp-route-id="@room.RoomId" class="btn btn-view-details">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+

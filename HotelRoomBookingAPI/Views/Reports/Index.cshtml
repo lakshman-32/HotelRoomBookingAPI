@@ -1,0 +1,194 @@
+@model HotelRoomBookingAPI.Models.Web.ViewModels.Reports.ReportsIndexVM
+
+@{
+    ViewData["Title"] = "Meal Reports";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="mb-2"><i class="bi bi-file-earmark-bar-graph"></i> Meal Reports</h1>
+        <p class="text-muted mb-0">Daily breakdown of meal requirements</p>
+    </div>
+    
+    <!-- Filter Form -->
+    <form asp-action="Index" method="get" class="d-flex gap-2 align-items-end p-3 bg-white rounded shadow-sm border">
+        <div>
+            <label asp-for="FromDate" class="form-label small fw-bold text-muted mb-1">From Date</label>
+            <input asp-for="FromDate" type="date" class="form-control form-control-sm" />
+        </div>
+        <div>
+            <label asp-for="ToDate" class="form-label small fw-bold text-muted mb-1">To Date</label>
+            <input asp-for="ToDate" type="date" class="form-control form-control-sm" />
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm px-3">
+            <i class="bi bi-funnel"></i> Apply Filter
+        </button>
+    </form>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                <thead style="background-color: rgb(189, 215, 238);">
+                    <tr>
+                        <th class="ps-4 py-3">Date</th>
+                        <th class="py-3 text-center"><i class="bi bi-cup-hot text-warning me-1"></i> Breakfast</th>
+                        <th class="py-3 text-center"><i class="bi bi-brightness-high text-warning me-1"></i> Lunch</th>
+                        <th class="py-3 text-center"><i class="bi bi-moon-stars text-primary me-1"></i> Dinner</th>
+                        <th class="py-3 text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Reports != null && Model.Reports.Any())
+                    {
+                        foreach (var row in Model.Reports)
+                        {
+                            <tr>
+                                <td class="ps-4 fw-bold">@row.Date.ToString("ddd, MMM dd yyyy")</td>
+                                <td class="text-center">
+                                    <button type="button" 
+                                            class="btn badge bg-warning text-dark rounded-pill px-3 border-0" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#detailsModal"
+                                            data-date="@row.Date.ToString("yyyy-MM-dd")"
+                                            data-display-date="@row.Date.ToString("MMM dd, yyyy")"
+                                            data-meal-type="Breakfast"
+                                            title="View Breakfast Details">
+                                        @row.BreakfastCount
+                                    </button>
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" 
+                                            class="btn badge bg-warning text-dark rounded-pill px-3 border-0" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#detailsModal"
+                                            data-date="@row.Date.ToString("yyyy-MM-dd")"
+                                            data-display-date="@row.Date.ToString("MMM dd, yyyy")"
+                                            data-meal-type="Lunch"
+                                            title="View Lunch Details">
+                                        @row.LunchCount
+                                    </button>
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" 
+                                            class="btn badge bg-primary rounded-pill px-3 border-0" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#detailsModal"
+                                            data-date="@row.Date.ToString("yyyy-MM-dd")"
+                                            data-display-date="@row.Date.ToString("MMM dd, yyyy")"
+                                            data-meal-type="Dinner"
+                                            title="View Dinner Details">
+                                        @row.DinnerCount
+                                    </button>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <button type="button" 
+                                            class="btn btn-sm btn-outline-primary rounded-pill px-3 view-details-btn"
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#detailsModal"
+                                            data-date="@row.Date.ToString("yyyy-MM-dd")"
+                                            data-display-date="@row.Date.ToString("MMM dd, yyyy")">
+                                        <i class="bi bi-eye"></i> View
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="bi bi-calendar-x fs-1"></i>
+                                <p class="mt-2 mb-0">No data found for the selected range.</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- View Modal -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom-0 pb-0">
+               <div>
+                    <h5 class="modal-title fw-bold">Meal Details</h5>
+                    <h5 class="text-primary mb-0" id="modalDateSubtitle">Loading...</h5>
+               </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+             
+            <!-- Content will be injected here -->
+            <div class="modal-body p-0" id="modalContentArea">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('detailsModal');
+            const modalTitleDate = document.getElementById('modalDateSubtitle');
+            const modalContent = document.getElementById('modalContentArea');
+            
+            modal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const mealType = button.getAttribute('data-meal-type');
+                const date = button.getAttribute('data-date');
+                const displayDate = button.getAttribute('data-display-date');
+                
+                // Update title
+                modalTitleDate.textContent = displayDate;
+                if (mealType) {
+                    modalTitleDate.textContent += ` - ${mealType}`;
+                }
+                
+                // Show loader
+                modalContent.innerHTML = `
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                `;
+                
+                // Fetch details
+                let url = `/Reports/GetDetails?date=${date}`;
+                if (mealType) {
+                    url += `&mealType=${mealType}`;
+                }
+
+                fetch(url)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response.text();
+                    })
+                    .then(html => {
+                        modalContent.innerHTML = html;
+                    })
+                    .catch(error => {
+                        modalContent.innerHTML = `
+                            <div class="text-center py-4 text-danger">
+                                <i class="bi bi-exclamation-circle fs-2"></i>
+                                <p class="mt-2">Failed to load details. Please try again.</p>
+                            </div>
+                        `;
+                        console.error('Error:', error);
+                    });
+            });
+        });
+    </script>
+}
+
+

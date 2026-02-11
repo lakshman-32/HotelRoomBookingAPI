@@ -1,0 +1,482 @@
+@model HotelRoomBookingAPI.Models.Web.ViewModels.AvailabilitySearchVM
+
+@{
+    ViewData["Title"] = "Room Availability";
+}
+
+<style>
+
+    
+    .search-card {
+        background: white;
+        border-radius: 20px;
+        padding: 35px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        margin-bottom: 40px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 8px;
+    }
+    
+    .form-control, .form-select {
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px 16px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #536DFE;
+        box-shadow: 0 0 0 4px rgba(83, 109, 254, 0.1);
+    }
+    
+    .btn-search {
+        background: #536DFE;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 10px 24px;
+        font-weight: 700;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(83, 109, 254, 0.3);
+        width: 100%;
+    }
+    
+    .btn-search:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(83, 109, 254, 0.5);
+        color: white;
+    }
+    
+    .info-card {
+        background: rgba(83, 109, 254, 0.1);
+        border-left: 4px solid #536DFE;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .results-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    }
+    
+    .results-table {
+        margin: 0;
+    }
+    
+    .results-table thead {
+        background: rgb(189, 215, 238);
+    }
+    
+        color: black;
+        font-weight: 700;
+        padding: 20px;
+        border: none;
+        white-space: nowrap;
+        text-align: center;
+    }
+    
+    .results-table tbody td {
+        padding: 18px 20px;
+        vertical-align: middle;
+        color: #000;
+        text-align: center;
+    }
+    
+    .results-table tbody tr {
+        transition: all 0.3s ease;
+        border-bottom: 1px solid #f7fafc;
+    }
+    
+    .results-table tbody tr:hover {
+        background: rgba(83, 109, 254, 0.05);
+    }
+    
+    .room-number-link {
+        color: #536DFE;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .room-number-link:hover {
+        color: #304FFE;
+    }
+    
+    .btn-book {
+        background: #536DFE;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 24px;
+        font-weight: 700;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        box-shadow: 0 4px 15px rgba(83, 109, 254, 0.3);
+        white-space: nowrap;
+    }
+    
+    .btn-book:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(83, 109, 254, 0.5);
+        color: white;
+    }
+    
+    .no-results {
+        text-align: center;
+        padding: 60px 20px;
+        color: #718096;
+    }
+    
+    .no-results i {
+        font-size: 4rem;
+        color: #cbd5e0;
+        margin-bottom: 20px;
+    }
+    
+    .table-scroll-container {
+        max-height: 600px;
+        overflow-y: auto;
+        border-radius: 20px;
+    }
+    
+    .table-scroll-container::-webkit-scrollbar {
+        width: 10px;
+    }
+    
+    .table-scroll-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .table-scroll-container::-webkit-scrollbar-thumb {
+        background: #536DFE;
+        border-radius: 10px;
+    }
+    
+    .table-scroll-container::-webkit-scrollbar-thumb:hover {
+        background: #304FFE;
+    }
+</style>
+
+<div class="page-header">
+    <h1><i class="bi bi-search"></i> Find Available Rooms</h1>
+</div>
+
+<div class="container" style="max-width: 1400px;">
+    @if (Model.AvailableRooms != null && Model.AvailableRooms.Any())
+    {
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <!-- Label removed as per request -->
+        </div>
+    }
+    
+    <div class="search-card">
+        <form asp-action="Available" method="post">
+            @Html.AntiForgeryToken()
+            
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger mb-3">
+                    @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+                </div>
+            }
+            
+            <div class="d-flex align-items-end gap-2 overflow-auto py-2">
+                <div style="flex: 0 0 160px;">
+                    <label asp-for="BuildingId" class="form-label mb-1">Building</label>
+                    <select asp-for="BuildingId" asp-items="Model.BuildingsSelectList" class="form-select" id="buildingSelect">
+                        <option value="">Select Building</option>
+                    </select>
+                </div>
+                
+                <div style="flex: 0 0 140px;">
+                    <label asp-for="FloorId" class="form-label mb-1">Floor</label>
+                    <select asp-for="FloorId" asp-items="Model.FloorsSelectList" class="form-select" id="floorSelect">
+                        <option value="">All Floors</option>
+                    </select>
+                </div>
+                
+                <div style="flex: 0 0 140px;">
+                    <label asp-for="Date" class="form-label mb-1">Check-In</label>
+                    <input asp-for="Date" type="date" class="form-control" id="checkInDate" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                </div>
+                
+                <div style="flex: 0 0 100px;">
+                    <label asp-for="FromTime" class="form-label mb-1">From</label>
+                    <input asp-for="FromTime" type="time" class="form-control" value="@Model.FromTime?.ToString(@"hh\:mm")" required />
+                </div>
+                
+                <div style="flex: 0 0 140px;">
+                    <label asp-for="CheckOutDate" class="form-label mb-1">Check-Out</label>
+                    <input asp-for="CheckOutDate" type="date" class="form-control" id="checkOutDate" placeholder="Optional" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                </div>
+                
+                <div style="flex: 0 0 100px;">
+                    <label asp-for="ToTime" class="form-label mb-1">To</label>
+                    <input asp-for="ToTime" type="time" class="form-control" value="@Model.ToTime?.ToString(@"hh\:mm")" required />
+                </div>
+                
+                <div style="flex: 0 0 140px;">
+                    <label class="form-label mb-1">Type</label>
+                    <select class="form-select" id="roomTypeFilter">
+                        <option value="">All Types</option>
+                        <option value="Single">Single Room</option>
+                        <option value="Double">Double Room</option>
+                        <option value="Family">Family</option>
+                        <option value="Deluxe">Deluxe</option>
+                    </select>
+                </div>
+                
+                <div style="flex: 0 0 auto;">
+                    <button type="submit" class="btn btn-search">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    @if (Model.AvailableRooms != null && Model.AvailableRooms.Any())
+    {
+        <div class="d-flex justify-content-between align-items-center my-4">
+            <h4 class="mb-0">Available Rooms</h4>
+            <span class="badge rounded-pill" style="background: #536DFE; font-size: 1rem; padding: 8px 16px;">@Model.AvailableRooms.Count room(s) found</span>
+        </div>
+        
+        <div class="results-card">
+            <div class="table-scroll-container">
+                <table class="table results-table mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">S.no</th>
+                            <th>Room Number</th>
+                            <th>Floor</th>
+                            <th>Room Type</th>
+                            <th>Capacity</th>
+                            <th style="width: 100px;">View</th>
+                            <th style="width: 200px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < Model.AvailableRooms.Count; i++)
+                        {
+                            var room = Model.AvailableRooms[i];
+                            <tr class="room-card" data-room-type="@room.RoomTypeName">
+                                <td>@(i + 1)</td>
+                                <td>
+                                    <span class="badge" style="background: #536DFE; color: white; font-size: 1rem; padding: 8px 16px; border-radius: 8px;">@room.RoomNumber</span>
+                                </td>
+                                <td>@room.FloorNumber</td>
+                                <td>@room.RoomTypeName</td>
+                                <td>@room.Capacity</td>
+                                <td>
+                                    <button type="button" class="btn btn-info text-white text-nowrap" 
+                                            onclick='viewRoomDetails(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(room)))'>
+                                        <i class="bi bi-eye"></i> View
+                                    </button>
+                                </td>
+                                <td>
+                                    @{
+                                        var isMultiDay = Model.CheckOutDate.HasValue && Model.Date.HasValue && Model.CheckOutDate.Value.Date != Model.Date.Value.Date;
+                                        var buttonText = isMultiDay 
+                                            ? $"Book {Model.Date?.ToString("MMM dd")} - {Model.CheckOutDate?.ToString("MMM dd")}"
+                                            : $"Book {Model.FromTime?.ToString(@"hh\:mm") ?? ""} - {Model.ToTime?.ToString(@"hh\:mm") ?? ""}";
+                                    }
+                                    
+                                    <form asp-controller="Reservations" asp-action="QuickBook" method="post" class="d-inline">
+                                        <input type="hidden" name="roomId" value="@room.RoomId" />
+                                        <input type="hidden" name="date" value="@Model.Date?.ToString("yyyy-MM-dd")" />
+                                        <input type="hidden" name="checkOutDate" value="@Model.CheckOutDate?.ToString("yyyy-MM-dd")" />
+                                        <input type="hidden" name="from" value="@Model.FromTime?.ToString(@"hh\:mm")" />
+                                        <input type="hidden" name="to" value="@Model.ToTime?.ToString(@"hh\:mm")" />
+                                        
+                                        <button type="submit" class="btn-book">
+                                            @buttonText
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else if (Model.SearchPerformed && ViewData.ModelState.IsValid)
+    {
+        <div class="results-card">
+            <div class="no-results">
+                <i class="bi bi-inbox"></i>
+                <h4>No Available Rooms</h4>
+                <p>No rooms are available for the selected criteria. Please try different dates or times.</p>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- View Room Details Modal -->
+<div class="modal fade" id="roomDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Room Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-0">
+                    <div class="col-md-6">
+                        <img id="modalRoomImage" src="" class="img-fluid rounded-start h-100" style="object-fit: cover; width: 100%; min-height: 250px;" alt="Room Image">
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card-body p-3">
+                            <h2 class="card-title" id="modalRoomType"></h2>
+                            <h4 class="text-muted" id="modalRoomNumber"></h4>
+                            <hr/>
+                            <dl class="row">
+                                <dt class="col-sm-4">Hotel</dt>
+                                <dd class="col-sm-8" id="modalHotel"></dd>
+
+                                <dt class="col-sm-4">Location</dt>
+                                <dd class="col-sm-8" id="modalLocation"></dd>
+
+                                <dt class="col-sm-4">Floor</dt>
+                                <dd class="col-sm-8" id="modalFloor"></dd>
+                                
+                                <dt class="col-sm-4">Capacity</dt>
+                                <dd class="col-sm-8" id="modalCapacity"></dd>
+
+                                <dt class="col-sm-4">Status</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge bg-success" id="modalStatus"></span>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function getRoomImage(roomType) {
+        const type = (roomType || "standard").toLowerCase();
+        if (type.includes("suite") || type.includes("deluxe")) return "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=800&auto=format&fit=crop";
+        if (type.includes("single")) return "https://images.unsplash.com/photo-1631049552057-403cdb8f0658?q=80&w=800&auto=format&fit=crop";
+        return "https://images.unsplash.com/photo-1618773928121-c32242e63f39?q=80&w=800&auto=format&fit=crop";
+    }
+
+    function viewRoomDetails(room) {
+        const modal = new bootstrap.Modal(document.getElementById('roomDetailsModal'));
+        
+        document.getElementById('modalRoomType').textContent = room.RoomTypeName;
+        document.getElementById('modalRoomNumber').textContent = 'Room ' + room.RoomNumber;
+        document.getElementById('modalHotel').textContent = room.BuildingName;
+        document.getElementById('modalLocation').textContent = room.BuildingLocation;
+        document.getElementById('modalFloor').textContent = room.FloorNumber;
+        document.getElementById('modalCapacity').textContent = room.Capacity + ' Guests';
+        document.getElementById('modalStatus').textContent = room.Status || 'Available';
+        
+        document.getElementById('modalRoomImage').src = getRoomImage(room.RoomTypeName);
+        
+        modal.show();
+    }
+
+    // Dynamic date validation: ensure Check-Out date is not earlier than Check-In date
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkInDateInput = document.querySelector('input[name="Date"]');
+        const checkOutDateInput = document.querySelector('input[name="CheckOutDate"]');
+        
+        if (checkInDateInput && checkOutDateInput) {
+            checkInDateInput.addEventListener('change', function() {
+                const checkInDate = this.value;
+                if (checkInDate) {
+                    // Set the minimum Check-Out date to the selected Check-In date
+                    checkOutDateInput.min = checkInDate;
+                    
+                    // If Check-Out date is already selected and is earlier than Check-In, clear it
+                    if (checkOutDateInput.value && checkOutDateInput.value < checkInDate) {
+                        checkOutDateInput.value = '';
+                    }
+                }
+            });
+        }
+        
+        // Dynamic floor loading: load floors when building is selected
+        const buildingSelect = document.getElementById('buildingSelect');
+        const floorSelect = document.getElementById('floorSelect');
+        
+        if (buildingSelect && floorSelect) {
+            buildingSelect.addEventListener('change', async function() {
+                const buildingId = this.value;
+                
+                // Clear current floor options
+                floorSelect.innerHTML = '<option value="">All Floors</option>';
+                
+                if (buildingId) {
+                    try {
+                        // Fetch floors for the selected building
+                        const response = await fetch(`/Rooms/GetFloorsByBuilding?buildingId=${buildingId}`);
+                        if (response.ok) {
+                            const floors = await response.json();
+                            
+                            // Populate floor dropdown
+                            floors.forEach(floor => {
+                                const option = document.createElement('option');
+                                option.value = floor.floorId;
+                                option.textContent = `Floor ${floor.floorNumber}`;
+                                floorSelect.appendChild(option);
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error loading floors:', error);
+                    }
+                }
+            });
+        }
+        
+        // Room Type Filter: Filter displayed rooms by selected type
+        const roomTypeFilter = document.getElementById('roomTypeFilter');
+        
+        if (roomTypeFilter) {
+            roomTypeFilter.addEventListener('change', function() {
+                const selectedType = this.value.toLowerCase();
+                const roomCards = document.querySelectorAll('.room-card');
+                
+                roomCards.forEach(card => {
+                    const roomType = card.getAttribute('data-room-type');
+                    
+                    if (!selectedType || roomType.toLowerCase().includes(selectedType)) {
+                        card.style.display = '';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+                
+                
+                // Update room count
+                const visibleRooms = document.querySelectorAll('.room-card:not([style*="display: none"])').length;
+                const countBadges = document.querySelectorAll('.badge.rounded-pill');
+                
+                countBadges.forEach(badge => {
+                     // Check if it's the top badge (just number) or bottom badge (text)
+                     // Or just standardize both to show the full text "X room(s) found"
+                     badge.textContent = `${visibleRooms} room(s) found`;
+                });
+            });
+        }
+    });
+</script>
+
+
