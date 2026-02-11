@@ -568,3 +568,4 @@ C:\Booking\HotelRoomBookingAPI\HotelRoomBookingAPI\obj\Debug\net10.0\HotelRoomBo
 C:\Booking\HotelRoomBookingAPI\HotelRoomBookingAPI\obj\Debug\net10.0\ref\HotelRoomBookingAPI.dll
 C:\Booking\HotelRoomBookingAPI\HotelRoomBookingAPI\obj\Debug\net10.0\compressed\fj4l3e1qbf-{0}-52onvrnxns-52onvrnxns.gz
 C:\Booking\HotelRoomBookingAPI\HotelRoomBookingAPI\obj\Debug\net10.0\staticwebassets.upToDateCheck.txt
+C:\Booking\HotelRoomBookingAPI\HotelRoomBookingAPI\obj\Debug\net10.0\HotelRoomBookingAPI.sourcelink.json

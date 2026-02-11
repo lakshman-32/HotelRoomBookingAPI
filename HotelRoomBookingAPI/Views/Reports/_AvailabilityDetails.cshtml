@@ -54,11 +54,23 @@
                     @foreach (var group in buildingGroups)
                     {
                         var groupCount = group.Count();
+                        var availableCount = group.Count(x => x.Status == "Available");
                         var collapseId = "collapse-bldg-" + groupIndex;
 
                         <tr class="fw-bold bg-light border-bottom">
                             <td class="ps-4">@group.Key</td>
-                            <td class="text-center"><span class="badge bg-secondary rounded-pill px-3">@groupCount</span></td>
+                            <td class="text-center">
+                                <span class="badge bg-secondary rounded-pill px-3">
+                                    @if(showAll)
+                                    {
+                                        <text>@availableCount / @groupCount</text>
+                                    }
+                                    else
+                                    {
+                                        @groupCount
+                                    }
+                                </span>
+                            </td>
                             <td class="text-end pe-4">
                                 <button class="btn btn-sm btn-primary rounded-pill px-3" type="button" data-bs-toggle="collapse" data-bs-target="#@collapseId" aria-expanded="false" aria-controls="@collapseId">
                                     <i class="bi bi-eye me-1"></i> View
