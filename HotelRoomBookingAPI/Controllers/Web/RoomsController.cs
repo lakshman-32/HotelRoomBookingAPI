@@ -146,10 +146,19 @@ public class RoomsController : Controller
             var hasConflict = allBookings?.Any(b =>
                 b.RoomId == room.RoomId &&
                 b.BookingStatus != "Cancelled" &&
-                b.BookingStartDateTime.HasValue &&
-                b.BookingEndDateTime.HasValue &&
-                b.BookingStartDateTime.Value < selectedEnd &&
-                b.BookingEndDateTime.Value > selectedStart
+                (
+                    // Rule 1: Strict Occupancy (User Request)
+                    // If a room is CheckedIn and ANY occupant is NOT checked out, it is BLOCKED.
+                    // This prevents booking a room that is currently occupied, regardless of the requested dates.
+                    (b.BookingStatus == "CheckedIn" && b.Occupants != null && b.Occupants.Any(o => !o.IsCheckedOut)) ||
+                    
+                    // Rule 2: Date Overlap
+                    // Standard check for future/planned bookings
+                    (
+                        (b.BookingStartDateTime ?? b.CheckInDate) < selectedEnd &&
+                        (b.BookingEndDateTime ?? b.CheckOutDate) > selectedStart
+                    )
+                )
             ) ?? false;
             
             if (!hasConflict)

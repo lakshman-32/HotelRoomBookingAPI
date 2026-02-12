@@ -127,11 +127,17 @@ public class ReportsController : ControllerBase
         // 1. Get Total Rooms count
         var totalRooms = await _context.Rooms.CountAsync();
 
-        // 2. Fetch all active bookings in range
+        // 2. Fetch active bookings.
+        // We need to fetch bookings that are:
+        // - Booked/CheckedIn within range
+        // - OR CheckedIn and possibly overstaying (CheckOutDate < fromDate BUT !IsCheckedOut)
+        // Note: For overstaying, we need to check Occupants.
         var bookings = await _context.Bookings
-            .Where(b => b.BookingStatus == "Booked" || b.BookingStatus == "CheckedIn")
-            .Where(b => b.CheckInDate <= toDate && b.CheckOutDate >= fromDate)
-            .Select(b => new { b.CheckInDate, b.CheckOutDate, b.RoomId })
+            .Include(b => b.Occupants)
+            .Where(b => 
+                (b.BookingStatus == "Booked" && b.CheckInDate <= toDate && b.CheckOutDate >= fromDate) ||
+                (b.BookingStatus == "CheckedIn") // Fetch all CheckedIn, filter in memory for overstays to avoid complex EF translation
+            )
             .ToListAsync();
 
         var report = new List<AvailabilityRowDto>();
@@ -139,8 +145,54 @@ public class ReportsController : ControllerBase
         // 3. Iterate through each day
         for (var date = fromDate.Date; date <= toDate.Date; date = date.AddDays(1))
         {
-            // Count bookings active on this date
-            var bookedCount = bookings.Count(b => date >= b.CheckInDate.Date && date <= b.CheckOutDate.Date);
+            var bookedCount = 0;
+            foreach (var b in bookings)
+            {
+                // Standard Date Overlap
+                bool dateOverlap = date >= b.CheckInDate.Date && date <= b.CheckOutDate.Date;
+                
+                // Overstay Logic:
+                // If date is Today or earlier, and status is CheckedIn, and NOT all checked out
+                // We consider it occupied if it overlaps OR if it's an overstay for THIS date
+                // Simplification: If Status is CheckedIn, and ANY occupant is !IsCheckedOut, 
+                // AND date >= CheckInDate AND date <= Today (if overstaying). 
+                
+                // Actually, if they are NOT checked out, they are physically in the room right now (Today).
+                // They occupy the room for any date from CheckInDate up to Today (inclusive).
+                // Does it block tomorrow? Technically yes until they leave, but for reporting "Availability", usually we check if it's currently occupied.
+                
+                bool isOccupied = false;
+
+                if (b.BookingStatus == "Booked")
+                {
+                    isOccupied = dateOverlap;
+                }
+                else if (b.BookingStatus == "CheckedIn")
+                {
+                    if (dateOverlap)
+                    {
+                        isOccupied = true;
+                    }
+                    else
+                    {
+                        // Check for overstay
+                        // Only relevant if date > CheckOutDate (overstaying)
+                        bool overstaying = date > b.CheckOutDate.Date;
+                        // And date needs to be <= Now (we can't say they are overstaying next year yet)
+                        // Actually, if they haven't checked out today, the room is not available TODAY.
+                        
+                        if (overstaying && date.Date <= DateTime.Today && b.Occupants.Any(o => !o.IsCheckedOut))
+                        {
+                            isOccupied = true;
+                        }
+                    }
+                }
+
+                if (isOccupied)
+                {
+                    bookedCount++;
+                }
+            }
 
             report.Add(new AvailabilityRowDto
             {
@@ -164,19 +216,40 @@ public class ReportsController : ControllerBase
             .Include(r => r.RoomType)
             .ToListAsync();
 
-        // 2. Get bookings for this date
+        // 2. Get bookings relevant to this date
         var bookings = await _context.Bookings
             .Include(b => b.Occupants)
-            .Where(b => b.BookingStatus == "Booked" || b.BookingStatus == "CheckedIn")
-            .Where(b => b.CheckInDate.Date <= date.Date && b.CheckOutDate.Date >= date.Date)
+            .Where(b => 
+                (b.BookingStatus == "Booked" && b.CheckInDate <= date && b.CheckOutDate >= date) ||
+                (b.BookingStatus == "CheckedIn") // Fetch all CheckedIn, filter below
+            )
             .ToListAsync();
 
         var details = new List<AvailabilityDetailDto>();
 
         foreach (var room in rooms)
         {
-            // Check if room is booked
-            var booking = bookings.FirstOrDefault(b => b.RoomId == room.RoomId);
+            // Find if room is booked/occupied on this date
+            var booking = bookings.FirstOrDefault(b => 
+            {
+                if (b.RoomId != room.RoomId) return false;
+
+                bool dateOverlap = date.Date >= b.CheckInDate.Date && date.Date <= b.CheckOutDate.Date;
+
+                if (b.BookingStatus == "Booked") return dateOverlap;
+                
+                if (b.BookingStatus == "CheckedIn")
+                {
+                    if (dateOverlap) return true;
+                    // Overstay Logic: Date > CheckOut AND Date <= Today AND !IsCheckedOut
+                    if (date.Date > b.CheckOutDate.Date && date.Date <= DateTime.Today && b.Occupants.Any(o => !o.IsCheckedOut))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            });
+
             var isBooked = booking != null;
 
             if (status == "Booked" && !isBooked) continue;
